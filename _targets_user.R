@@ -1,5 +1,5 @@
 # CHANGE MANUALLY
-site_id <- "CSVER_C10"
+site_id <- "RJER_C01"
 chunk_size <- 200
 
 # make timelapse video?
@@ -16,4 +16,4 @@ time_end <- "12:10:00"
 # DO NOT CHANGE MANUALLY!
 # to update run: source("set_photo_dir.R")
 # select a photo inside the folder of interest
-user_directory <- "F:/TIMELAPSE/R5_dtsm/CSVER_C10/20250303"
+user_directory <- "/Volumes/CEMAF_pheno/DTSM_TIMELAPSE/RJER_C01/20250108"
