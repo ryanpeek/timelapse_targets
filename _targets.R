@@ -96,34 +96,48 @@ core_targets <-
       iteration = "list"
     ),
 
-    # Read EXIF metadata
+    # First: Read EXIF from CSV if it exists
     tar_target(
-      exif_data_chunk,
+      exif_data,
       {
-        if(fs::file_exists(exif_csv_path)){
+        if (fs::file_exists(exif_csv_path)) {
+          message(">>> Found existing EXIF CSV, skipping EXIF extraction")
           readr::read_csv(exif_csv_path)
-          message("Already processed, reading in now...")
         } else {
-          message("Reading EXIF metadata in chunks...")
+          NULL
+        }
+      }
+    ),
+
+    # Otherwise read EXIF in chunks
+    tar_target(
+      exif_data_chunks,
+      {
+        if (is.null(exif_data)) {
+          message(">>> Reading EXIF metadata in chunks")
           exiftoolr::exif_read(photo_chunks) |> janitor::clean_names()
+        } else {
+          NULL
         }
       },
       pattern = map(photo_chunks),
       iteration = "list"
     ),
 
-    # Format metadata
-    tar_target(
-      photo_attribs_chunk,
-      format_exif_metadata(exif_data_chunk, site_id),
-      pattern = map(exif_data_chunk),
-      iteration = "list"
-    ),
-
-    # Combine metadata
+    # Format either the chunked or full data
     tar_target(
       photo_metadata,
-      bind_rows(photo_attribs_chunk)
+      {
+        if (!is.null(exif_data)) {
+          # Already formatted, return directly
+          exif_data
+        } else {
+          # Needs formatting first
+          bind_rows(
+            lapply(exif_data_chunks, format_exif_metadata, site_id = site_id)
+          )
+        }
+      }
     ),
 
     # Merge with previous

@@ -43,20 +43,34 @@ tar_visnetwork(targets_only = TRUE)
 source("rename_photos_interactive.R")
 rename_photos_safely(photo_metadata = tar_read(photo_metadata))
 
-## 6. Plot Photo Timespan ----------------------------------------
+## 6. Create ROI --------------------------------------------------------------
 
-# get most recent merged dataset
 library(tidyverse)
 library(fs)
 library(glue)
 source("_targets_user.R")
+source("R/create_polygon_roi.R")
 
-merged_metadata <- read_csv(glue("{fs::path_dir(user_directory)}/pheno_exif_{site_id}_latest.csv.gz"))
+# site_id and photo directory loaded from _targets_user
+photo_exif <- load_photo_metadata(user_directory, site_id)
 
-#plot duration
-ggplot(data=merged_metadata, aes(x=datetime, y=image_height)) +
+# see what the time span looks like and if image has shifted
+ggplot(data=photo_exif, aes(x=datetime, y=image_height)) +
   geom_line(color="gray") +
-  geom_point(pch=21, color=alpha("gray",0.3), fill="orange", alpha=0.6)+
+  geom_point(pch=16, color=alpha("orange",0.7), size=4)+
   scale_x_datetime(date_breaks = "2 months", date_labels = "%b-%y") +
   theme_minimal()
+
+# Filter to only Noon photos:
+photo_exif_noon <- photo_exif |>
+  filter(
+    hms::as_hms(datetime) >= hms::as_hms(time_start) & hms::as_hms(datetime) < hms::as_hms(time_end))
+
+# if you want a specific date range:
+# photo_exif_noon <- photo_exif_noon |>
+#  filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
+
+# Now draw on the photo?
+make_polygon_roi(photo_exif_noon, index = 3, mask_type = "SH_01_01", user_directory)
+
 
