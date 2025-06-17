@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.Rdata
+.httr-oauth
+.DS_Store
+.quarto
+README.html
+_targets_packages.R
+_targets
+_targets.Rmd
+_targets.yaml
+logs/
