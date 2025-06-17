@@ -27,19 +27,21 @@ tar_visnetwork(targets_only = TRUE)
 tar_make() # this defaults to _targets.R
 # this extracts metadata, merges metadata with preexisting metadata, and saves out.
 
-## 4b. IF YOU HAVE >1000 photos, can try to run things in parallel. This helps
+## 4b. IF YOU HAVE >1000 photos, you can try to run things in parallel. This helps
 # speed things up. This should work on any computer.
 # With future (multisession/local multicore)
-library(future)
-plan(multisession)
-tar_make_future()
+#library(future)
+#plan(multisession)
+#tar_make_future()
+
+# rerun to check status and see if it worked?
+tar_visnetwork(targets_only = TRUE)
 
 ## 5. Rename Photos ----------------------------------------------------------
 
 # now rename photos...this script does this interactively and will log what happened
 source("rename_photos_interactive.R")
 rename_photos_safely(photo_metadata = tar_read(photo_metadata))
-
 
 ## 6. Plot Photo Timespan ----------------------------------------
 
@@ -52,6 +54,9 @@ source("_targets_user.R")
 merged_metadata <- read_csv(glue("{fs::path_dir(user_directory)}/pheno_exif_{site_id}_latest.csv.gz"))
 
 #plot duration
-ggplot() + geom_col(data=merged_metadata, aes(x=datetime, y=image_height), fill="orange", alpha=0.6)+ theme_minimal()+
-  scale_x_datetime(date_breaks = "2 months", date_labels = "%b-%y")
+ggplot(data=merged_metadata, aes(x=datetime, y=image_height)) +
+  geom_line(color="gray") +
+  geom_point(pch=21, color=alpha("gray",0.3), fill="orange", alpha=0.6)+
+  scale_x_datetime(date_breaks = "2 months", date_labels = "%b-%y") +
+  theme_minimal()
 

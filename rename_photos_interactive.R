@@ -16,6 +16,8 @@ rename_photos_safely <- function(photo_metadata,
     if (!is.null(log_file)) write(msg, file = log_file, append = TRUE)
   }
 
+  fs::dir_create("logs")
+
   source("_targets_user.R")
   ph_folder <- as.character(fs::path_file(user_directory))
 

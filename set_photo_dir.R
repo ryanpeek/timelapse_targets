@@ -1,13 +1,24 @@
-# get the folder with photos:
+
+# FUNCTIONS TO WRITE THE SITE_ID and DIRECTORY
+library(glue)
+library(fs)
+
+
+# Select Folder -----------------------------------------------------------
+
+# Function to get Folder with Photos:
 select_dir <- function() {
   message("Select any image file WITHIN the folder you want to use:")
   dirname(file.choose(new = FALSE))
 }
-# run this
+
+# Run:
 selected_dir <- select_dir()
 
 # Confirm
 cat(glue::glue("Selected folder: {selected_dir}\n\n"))
+
+# Update Directory/Path in targets_user file ------------------------------
 
 # Load current _targets_user.R
 user_file <- "_targets_user.R"
@@ -31,4 +42,25 @@ if (any(grepl(pattern, user_lines))) {
 # Write updated file
 writeLines(user_lines, user_file)
 
-cat("\n ✅ User directory updated in _targets_user.R\n")
+# Update SITE_ID in targets_user file ------------------------------
+
+# get the site id from path:
+site_id <- fs::path_file(path_dir(selected_dir))
+
+# select the pattern in line
+pattern_site <- "^\\s*site_id\\s*<-.*$"
+
+# Create new line
+replacement_line_site <- glue::glue('site_id <- "{site_id}"')
+
+# Replace or insert
+if (any(grepl(pattern_site, user_lines))) {
+  user_lines <- sub(pattern_site, replacement_line_site, user_lines)
+} else {
+  user_lines <- c(user_lines, replacement_line_site)
+}
+
+# Write updated file
+writeLines(user_lines, user_file)
+
+cat(glue("\n Site ID: {site_id} and photo directory updated in _targets_user.R\n"))
