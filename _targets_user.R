@@ -1,5 +1,5 @@
 # CHANGE MANUALLY
-site_id <- "MFA_SK1"
+site_id <- "TUO-CLAV"
 chunk_size <- 200
 
 # make timelapse video?
@@ -16,4 +16,4 @@ time_end <- "12:10:00"
 # DO NOT CHANGE MANUALLY!
 # to update run: source("set_photo_dir.R")
 # select a photo inside the folder of interest
-user_directory <- "E:/TIMELAPSE_DTSM/MFA_SK1/20240718"
+user_directory <- "E:/TIMELAPSE_CWS/TUO-CLAV/20170205"

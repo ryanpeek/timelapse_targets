@@ -57,9 +57,10 @@ photo_exif <- load_photo_metadata(user_directory, site_id)
 # see what the time span looks like and if image has shifted
 ggplot(data=photo_exif, aes(x=datetime, y=image_height)) +
   geom_line(color="gray") +
-  geom_point(pch=16, color=alpha("orange",0.7), size=4)+
+  geom_point(pch=16, color=alpha("orange",0.7), size=4) +
+  labs(x="", y="Image Height (px)") +
   scale_x_datetime(date_breaks = "2 months", date_labels = "%b-%y") +
-  theme_minimal()
+  theme_light()
 
 # Filter to only Noon photos:
 photo_exif_noon <- photo_exif |>
@@ -71,6 +72,6 @@ photo_exif_noon <- photo_exif |>
 #  filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
 
 # Now draw on the photo?
-make_polygon_roi(photo_exif_noon, index = 3, mask_type = "SH_01_01", user_directory)
+make_polygon_roi(photo_exif_noon, index = 100, mask_type = "WT_01_01", user_directory, overwrite = TRUE)
 
 

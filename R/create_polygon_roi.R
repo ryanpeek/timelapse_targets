@@ -66,7 +66,7 @@ make_polygon_roi <- function(photo_exif_noon,
   #  img2 <- as.raster(img2)
   #}
 
-  plot(img, main = basename(img_path))
+  plotRGB(img) #main = basename(img_path))
   message("🖍️  Draw a polygon on the image. Press ESC or finish when done.")
   poly_out <- draw_poly_roi()
 
