@@ -81,9 +81,8 @@ library(tidyverse)
 
 source("_targets_user.R")
 source("R/load_photo_metadata.R")
-source("rgb_metrics/run_rgb_vectorized.R")
 source("rgb_metrics/run_rgb_parallel.R")
-#source("rgb_metrics/extract_rgb_metrics.R")
+#source("rgb_metrics/run_rgb_vectorized.R")
 
 # site_id and photo directory loaded "latest.csv.gz"
 photo_exif <- load_photo_metadata(user_directory, site_id)
@@ -99,27 +98,27 @@ photo_exif_noon <- photo_exif_noon |>
   filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
 
 # run standard vectorized
-system.time(
-  df2 <- extract_rgb_vect(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200"))
+# df <- extract_rgb_vect(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200v")
 
 # run in parallel
-system.time(
-  df3 <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200", chunk_size = 20, parallel = FALSE))
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200", chunk_size = 100, parallel = TRUE)
 
-# notes:
-# vect approach for ~100 photos was about 118, no quant
-# chunk approach for 100 photos was about 121 sec, no parallel, chunk=50
-# chunk approach for 100 photos was about 116 sec, no quant, no parallel, chunk=20
-# need to try with dt table approach...
-
-# tst
-timefilt <- "1200"
-df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
+# library(bench)
+# bench::mark(
+#   parallel = extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200_p", chunk_size = 50, parallel = TRUE),
+#   serial   = extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200_np", chunk_size = 50, parallel = FALSE),
+#   iterations = 1,
+#   check = FALSE
+# )
 
 # Plot --------------------------------------------------------------------
 
 library(tidyverse)
 library(ggimage)
+
+# Load the Data
+timefilt <- "1200"
+df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
 
 # ambient light filter
 filt_ambient_light <- 8000
@@ -132,11 +131,12 @@ photo_date_location <- max(df_f$datetime)-days(10)
 library(plotly)
 
 # plot
-(gg_grvi <- ggplot() +
-    geom_smooth(data=df,
-                aes(x=datetime, y=GRVI), method = "gam") +
-    geom_point(data=df,
-               aes(x=datetime, y=GRVI),
+ph_gg <- function(data, x_var, pheno_var){
+  ggplot() +
+    geom_smooth(data=data,
+                aes(x={{x_var}}, y={{pheno_var}}), method = "gam") +
+    geom_point(data=data,
+               aes(x={{x_var}}, y={{pheno_var}}),
                #fill=contrast),
                size=3, pch=21,
                fill="aquamarine4",
@@ -149,9 +149,12 @@ library(plotly)
          x="",
          caption=glue("Data filters: \nambient light > {filt_ambient_light}\ncontrast > {filt_contrast}")) +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), GRVI = .1),
-      aes(x=datetime, y=GRVI, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5))
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .3),
+      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
+}
+
+ph_gg(df, datetime, GRVI)
 
 # interactive plotly
-ggplotly(gg_grvi)
+ggplotly(ph_gg(df, datetime, GRVI))
 

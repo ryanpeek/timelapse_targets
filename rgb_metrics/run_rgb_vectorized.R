@@ -6,14 +6,8 @@ extract_rgb_vect <- function(site_id, mask_type, exif_dir, photo_exif_data, time
   library(dplyr)
   library(purrr)
   library(fs)
-  #library(furrr)
   library(terra)
   library(progressr)
-
-  # if (parallel) {
-  #   future::plan(future::multisession, workers = future::availableCores() - 1)
-  #   on.exit(future::plan(future::sequential), add = TRUE)
-  # }
 
   message("Loading EXIF metadata...")
   exif_file <- glue::glue("{exif_dir}/pheno_exif_{site_id}_latest.csv.gz")
