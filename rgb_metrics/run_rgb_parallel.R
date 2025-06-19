@@ -147,3 +147,13 @@ extract_rgb_parallel <- function(site_id, mask_type, exif_dir, photo_exif_data, 
 
   invisible(final_df)
 }
+
+
+
+# library(bench)
+# bench::mark(
+#   parallel = extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200_p", chunk_size = 50, parallel = TRUE),
+#   serial   = extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200_np", chunk_size = 50, parallel = FALSE),
+#   iterations = 1,
+#   check = FALSE
+# )

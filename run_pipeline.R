@@ -82,7 +82,6 @@ library(tidyverse)
 source("_targets_user.R")
 source("R/load_photo_metadata.R")
 source("rgb_metrics/run_rgb_parallel.R")
-#source("rgb_metrics/run_rgb_vectorized.R")
 
 # site_id and photo directory loaded "latest.csv.gz"
 photo_exif <- load_photo_metadata(user_directory, site_id)
@@ -97,19 +96,8 @@ photo_exif_noon <- photo_exif |>
 photo_exif_noon <- photo_exif_noon |>
   filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
 
-# run standard vectorized
-# df <- extract_rgb_vect(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200v")
-
-# run in parallel
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200", chunk_size = 100, parallel = TRUE)
-
-# library(bench)
-# bench::mark(
-#   parallel = extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200_p", chunk_size = 50, parallel = TRUE),
-#   serial   = extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200_np", chunk_size = 50, parallel = FALSE),
-#   iterations = 1,
-#   check = FALSE
-# )
+# run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200", chunk_size = 50, parallel = TRUE)
 
 # Plot --------------------------------------------------------------------
 
