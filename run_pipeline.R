@@ -79,6 +79,7 @@ make_polygon_roi(photo_exif_noon, index = 200, mask_type = "GR_01_01", user_dire
 
 library(tidyverse)
 
+# make sure to check params in targets_user
 source("_targets_user.R")
 source("R/load_photo_metadata.R")
 source("rgb_metrics/run_rgb_parallel.R")
@@ -97,7 +98,7 @@ photo_exif_noon <- photo_exif_noon |>
   filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200", chunk_size = 50, parallel = TRUE)
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1000-1300", chunk_size = 50, parallel = TRUE)
 
 # Plot --------------------------------------------------------------------
 
@@ -106,7 +107,7 @@ library(ggimage)
 library(plotly)
 
 # Load the Data
-timefilt <- "1200"
+timefilt <- "1000-1300"
 df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
 
 # ambient light filter
@@ -137,7 +138,7 @@ ph_gg <- function(data, x_var, pheno_var){
          x="",
          caption=glue("Data filters: \nambient light > {filt_ambient_light}\ncontrast > {filt_contrast}")) +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .3),
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .2),
       aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
