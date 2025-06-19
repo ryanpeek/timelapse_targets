@@ -78,7 +78,6 @@ make_polygon_roi(photo_exif_noon, index = 200, mask_type = "GR_01_01", user_dire
 ## 7. Generate Metrics ------------------------------------------------------
 
 library(tidyverse)
-library(glue)
 
 source("_targets_user.R")
 source("R/load_photo_metadata.R")
@@ -101,12 +100,17 @@ photo_exif_noon <- photo_exif_noon |>
 
 # run standard vectorized
 system.time(
-  df <- extract_rgb_vect(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200"))
+  df2 <- extract_rgb_vect(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200"))
 
 # run in parallel
 system.time(
-  df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200", chunk_size = 100, parallel = TRUE))
+  df3 <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200", chunk_size = 20, parallel = FALSE))
 
+# notes:
+# vect approach for ~100 photos was about 2 min, no quant
+# chunk approach for 100 photos was about 2 min, no parallel, chunk=50
+# chunk approach for 100 photos was about 2 min, no quant, no parallel, chunk=20
+# need to try with dt table approach...
 
 # tst
 timefilt <- "1200"
@@ -127,8 +131,8 @@ photo_date_location <- max(df_f$datetime)-days(40)
 
 library(plotly)
 
-#ggplotly(
-ggplot() +
+# plot
+gg_grvi <- ggplot() +
   geom_smooth(data=df_f,
               aes(x=datetime, y=GRVI), method = "gam") +
   geom_point(data=df_f,
@@ -147,5 +151,7 @@ ggplot() +
   geom_image(
     data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), gcc = .4),
     aes(x=datetime, y=gcc, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
-#)
+
+# interactive plotly
+ggplotly(gg_grvi)
 

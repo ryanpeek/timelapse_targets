@@ -8,7 +8,7 @@ make_timelapse_video <- FALSE # or change to FALSE
 
 # Date filter for videos:
 date_start <- as.Date("2016-12-01")
-date_end <- as.Date("2017-08-01") # or as "YYYY-MM-DD"
+date_end <- as.Date("2017-03-01") # or as "YYYY-MM-DD"
 
 # Time filter for videos, 24HR format
 time_start <- "12:00:00"

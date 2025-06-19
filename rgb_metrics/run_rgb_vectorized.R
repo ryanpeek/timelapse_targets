@@ -47,7 +47,7 @@ extract_rgb_vect <- function(site_id, mask_type, exif_dir, photo_exif_data, time
         cc <- colMeans(ccMat, na.rm = TRUE)
         cc <- cc / sum(cc)
 
-        quant <- apply(img_matrix, 2, quantile, probs = c(0, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 1), na.rm = TRUE)
+        #quant <- apply(img_matrix, 2, quantile, probs = c(0, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 1), na.rm = TRUE)
         std <- apply(ccMat, 2, sd)
 
         brightness <- mean(apply(img_matrix, 2, max))
@@ -57,13 +57,13 @@ extract_rgb_vect <- function(site_id, mask_type, exif_dir, photo_exif_data, time
           red = RGB[1], green = RGB[2], blue = RGB[3],
           rcc = cc[1], gcc = cc[2], bcc = cc[3],
           rcc.std = std[1], gcc.std = std[2], bcc.std = std[3],
-          rcc05 = quant[2,1], gcc05 = quant[2,2], bcc05 = quant[2,3],
-          rcc10 = quant[3,1], gcc10 = quant[3,2], bcc10 = quant[3,3],
-          rcc25 = quant[4,1], gcc25 = quant[4,2], bcc25 = quant[4,3],
-          rcc50 = quant[5,1], gcc50 = quant[5,2], bcc50 = quant[5,3],
-          rcc75 = quant[6,1], gcc75 = quant[6,2], bcc75 = quant[6,3],
-          rcc90 = quant[7,1], gcc90 = quant[7,2], bcc90 = quant[7,3],
-          rcc95 = quant[8,1], gcc95 = quant[8,2], bcc95 = quant[8,3],
+          #rcc05 = quant[2,1], gcc05 = quant[2,2], bcc05 = quant[2,3],
+          #rcc10 = quant[3,1], gcc10 = quant[3,2], bcc10 = quant[3,3],
+          #rcc25 = quant[4,1], gcc25 = quant[4,2], bcc25 = quant[4,3],
+          #rcc50 = quant[5,1], gcc50 = quant[5,2], bcc50 = quant[5,3],
+          #rcc75 = quant[6,1], gcc75 = quant[6,2], bcc75 = quant[6,3],
+          #rcc90 = quant[7,1], gcc90 = quant[7,2], bcc90 = quant[7,3],
+          #rcc95 = quant[8,1], gcc95 = quant[8,2], bcc95 = quant[8,3],
           brightness = brightness,
           darkness = darkness,
           contrast = brightness - darkness,

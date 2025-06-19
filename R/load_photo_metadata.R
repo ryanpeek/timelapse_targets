@@ -1,6 +1,10 @@
 
 # Getting Metadata
 load_photo_metadata <- function(photo_dir = NULL, site_id = NULL) {
+  library(glue)
+  library(fs)
+  library(readr)
+
   if (is.null(photo_dir)) {
     photo_dir <- dirname(file.choose(new = FALSE))
   }
