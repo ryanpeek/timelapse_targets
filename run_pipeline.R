@@ -103,6 +103,7 @@ df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, 
 
 library(tidyverse)
 library(ggimage)
+library(plotly)
 
 # Load the Data
 timefilt <- "1200"
@@ -116,9 +117,8 @@ df_f <- df |>
            contrast > filt_contrast)
 photo_date_location <- max(df_f$datetime)-days(10)
 
-library(plotly)
 
-# plot
+# plot function with basic settings
 ph_gg <- function(data, x_var, pheno_var){
   ggplot() +
     geom_smooth(data=data,
@@ -141,6 +141,7 @@ ph_gg <- function(data, x_var, pheno_var){
       aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
+# to use function, specify the data, the x, and y, with no quotes:
 ph_gg(df, datetime, GRVI)
 
 # interactive plotly
