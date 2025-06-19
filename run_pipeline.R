@@ -107,9 +107,9 @@ system.time(
   df3 <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200", chunk_size = 20, parallel = FALSE))
 
 # notes:
-# vect approach for ~100 photos was about 2 min, no quant
-# chunk approach for 100 photos was about 2 min, no parallel, chunk=50
-# chunk approach for 100 photos was about 2 min, no quant, no parallel, chunk=20
+# vect approach for ~100 photos was about 118, no quant
+# chunk approach for 100 photos was about 121 sec, no parallel, chunk=50
+# chunk approach for 100 photos was about 116 sec, no quant, no parallel, chunk=20
 # need to try with dt table approach...
 
 # tst
@@ -127,30 +127,30 @@ filt_contrast <- 150
 df_f <- df |>
   filter(#ambient_light >= filt_ambient_light &
            contrast > filt_contrast)
-photo_date_location <- max(df_f$datetime)-days(40)
+photo_date_location <- max(df_f$datetime)-days(10)
 
 library(plotly)
 
 # plot
-gg_grvi <- ggplot() +
-  geom_smooth(data=df_f,
-              aes(x=datetime, y=GRVI), method = "gam") +
-  geom_point(data=df_f,
-             aes(x=datetime, y=GRVI),
-             #fill=contrast),
-             size=3, pch=21,
-             fill="aquamarine4",
-             alpha=0.6) +
-  hrbrthemes::theme_ipsum_rc() +
-  scale_fill_viridis_c(option = "D", direction = -1) +
-  scale_x_datetime(date_breaks = "1 months", date_labels = "%b-%y") +
-  labs(title=glue("{site_id}"),
-       subtitle= glue("(Mask: {mask_type})"),
-       x="",
-       caption=glue("Data filters: \nambient light > {filt_ambient_light}\ncontrast > {filt_contrast}")) +
-  geom_image(
-    data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), gcc = .4),
-    aes(x=datetime, y=gcc, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
+(gg_grvi <- ggplot() +
+    geom_smooth(data=df,
+                aes(x=datetime, y=GRVI), method = "gam") +
+    geom_point(data=df,
+               aes(x=datetime, y=GRVI),
+               #fill=contrast),
+               size=3, pch=21,
+               fill="aquamarine4",
+               alpha=0.6) +
+    hrbrthemes::theme_ipsum_rc() +
+    scale_fill_viridis_c(option = "D", direction = -1) +
+    scale_x_datetime(date_breaks = "1 months", date_labels = "%b-%y") +
+    labs(title=glue("{site_id}"),
+         subtitle= glue("(Mask: {mask_type})"),
+         x="",
+         caption=glue("Data filters: \nambient light > {filt_ambient_light}\ncontrast > {filt_contrast}")) +
+    geom_image(
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), GRVI = .1),
+      aes(x=datetime, y=GRVI, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5))
 
 # interactive plotly
 ggplotly(gg_grvi)
