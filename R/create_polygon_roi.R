@@ -89,7 +89,7 @@ make_polygon_roi <- function(photo_exif_noon,
                        overwrite=overwrite)
   }
   # save plot
-  png(glue("{save_path}.png"),
+  png(glue("{save_path}_roi_masked.png"),
       width=800, # smaller
       #width = 2048, height = 1440, # full size
       bg = "transparent")
