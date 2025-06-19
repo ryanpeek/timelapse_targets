@@ -15,7 +15,7 @@ time_start <- "12:00:00"
 time_end <- "12:10:00"
 
 # ROI MASK TYPE IF IT EXISTS
-mask_type <- "WA_01_01"
+mask_type <- "GR_01_01"
 
 # DO NOT CHANGE MANUALLY! -----------------------------
 # these are updated automatically using `source("set_photo_dir.R")`

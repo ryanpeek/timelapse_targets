@@ -81,6 +81,7 @@ library(tidyverse)
 library(glue)
 
 source("_targets_user.R")
+source("R/load_photo_metadata.R")
 source("rgb_metrics/run_rgb_vectorized.R")
 source("rgb_metrics/run_rgb_parallel.R")
 #source("rgb_metrics/extract_rgb_metrics.R")
@@ -98,9 +99,14 @@ photo_exif_noon <- photo_exif |>
 photo_exif_noon <- photo_exif_noon |>
   filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
 
-# run
+# run standard vectorized
 system.time(
-  df <- extract_rgb_wrapper(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200"))
+  df <- extract_rgb_vect(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200"))
+
+# run in parallel
+system.time(
+  df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200", chunk_size = 100, parallel = TRUE))
+
 
 # tst
 timefilt <- "1200"
