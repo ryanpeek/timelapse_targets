@@ -81,9 +81,9 @@ library(tidyverse)
 library(glue)
 
 source("_targets_user.R")
-source("rgb_metrics/R/run_rgb_wrapper.R")
-source("rgb_metrics/R/extract_rgb_metrics.R")
-#source("rgb_metrics/R/clean_rgb_metrics.R")
+source("rgb_metrics/run_rgb_vectorized.R")
+source("rgb_metrics/run_rgb_parallel.R")
+#source("rgb_metrics/extract_rgb_metrics.R")
 
 # site_id and photo directory loaded "latest.csv.gz"
 photo_exif <- load_photo_metadata(user_directory, site_id)
@@ -103,7 +103,8 @@ system.time(
   df <- extract_rgb_wrapper(site_id, mask_type, exif_directory, photo_exif_noon, timefilt = "1200"))
 
 # tst
-df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_1200_tst.csv.gz"))
+timefilt <- "1200"
+df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
 
 # Plot --------------------------------------------------------------------
 
@@ -120,7 +121,7 @@ photo_date_location <- max(df_f$datetime)-days(40)
 
 library(plotly)
 
-ggplotly(
+#ggplotly(
 ggplot() +
   geom_smooth(data=df_f,
               aes(x=datetime, y=GRVI), method = "gam") +
@@ -140,5 +141,5 @@ ggplot() +
   geom_image(
     data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), gcc = .4),
     aes(x=datetime, y=gcc, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
-)
+#)
 
