@@ -77,7 +77,8 @@ extract_rgb_parallel <- function(site_id, mask_type, exif_dir, photo_exif_data, 
         brightness = brightness, darkness = darkness, contrast = brightness - darkness,
         grR = gcc / rcc, rbR = rcc / bcc, gbR = gcc / bcc,
         GRVI = (gcc - rcc) / (gcc + rcc), exG = 2 * green - red - blue,
-        file_name = fs::path_file(path)
+        file_name = fs::path_file(path),
+        mask_type = mask_type
       )
     }, error = function(e) {
       message("⚠️ Error on: ", path)

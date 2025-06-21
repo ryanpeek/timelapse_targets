@@ -36,7 +36,44 @@ rename_photos_safely <- function(cam_default_img_name = "RCNX") {
 
   # get metadata:
   photo_metadata_path <- glue("{exif_directory}/pheno_exif_{site_id}_{ph_folder}.csv.gz")
-  photo_metadata <- read_csv(photo_metadata_path)
+  photo_metadata <- read_csv(photo_metadata_path, show_col_types=FALSE)
+
+  #### NEW CODE
+  # Rename column in file list to match
+  default_named <- default_named |>
+    mutate(filename = path_file(path)) |>
+    rename(full_path = path)
+
+  # Join metadata to actual file list
+  matched <- photo_metadata |>
+    left_join(default_named, by = c("full_path" = "filename"))
+
+  # Identify unmatched
+  unmatched <- matched |> filter(is.na(full_path))
+
+  if (nrow(unmatched) > 0) {
+    log_message(glue("❌ {nrow(unmatched)} photo(s) in metadata could not be matched to files."))
+
+    # Optionally write to a separate log for inspection
+    unmatched_log_path <- glue("logs/unmatched_{site_id}_{ph_folder}.csv")
+    readr::write_csv(unmatched, unmatched_log_path)
+    log_message(glue("Unmatched metadata saved to: {unmatched_log_path}"))
+
+    # Ask user whether to continue
+    response <- tolower(trimws(readline("Some photos in metadata could not be matched to actual files. Proceed with partial renaming? (yes/no): ")))
+    if (!response %in% c("yes", "y")) {
+      log_message("User chose not to proceed due to unmatched files.")
+      return("aborted_due_to_unmatched")
+    }
+  }
+
+  # Filter out only matched rows for renaming
+  matched <- matched |> filter(!is.na(full_path))
+
+
+
+
+  ##########
 
   # create tally of dups
   duplicates_exist <- photo_metadata |>

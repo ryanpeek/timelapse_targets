@@ -62,6 +62,10 @@ make_polygon_roi <- function(photo_exif_noon,
   poly_rast <- terra::rasterize(poly_out, img)
   poly_rast[is.na(poly_rast)] <- 0
 
+  # Count number of pixels in the polygon (non-zero)
+  pixel_count <- global(poly_rast != 0, fun = "sum", na.rm = TRUE)[1, 1]
+  message(glue("{pixel_count} pixels selected in the ROI polygon."))
+
   # Save raster
   save_path <- glue("{exif_path}/ROI/{site_id}_{mask_type}")
   if (!is.null(save_path)) {
