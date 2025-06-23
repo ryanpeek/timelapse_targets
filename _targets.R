@@ -208,7 +208,7 @@ timelapse_targets <- if(make_timelapse_video){
           return(temp_file)
         }
         # assuming data exists, proceed here
-        vid_name = glue("{site_id}_{gsub(pattern = '-','',Sys.Date())}_video.mp4")
+        vid_name = glue("{site_id}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}_video.mp4")
         output_path <- glue("{vid_path}/{vid_name}")
 
         # make photo stack to use

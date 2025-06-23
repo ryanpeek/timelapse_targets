@@ -70,7 +70,7 @@ ggplot(data=photo_exif, aes(x=datetime, y=image_height)) +
 # Filter photos to the time and date range specified in _targets_user.R
 photo_exif_filt <- photo_exif |>
   filter(
-    hms::as_hms(datetime) >= hms::as_hms(time_start) & hms::as_hms(datetime) < hms::as_hms(time_end)) |>
+    hms::as_hms(datetime) >= hms::as_hms(time_start) & hms::as_hms(datetime) <= hms::as_hms(time_end)) |>
  filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
 
 # note how many in full dataset vs. filt dataset:
@@ -108,7 +108,7 @@ photo_exif <- load_photo_metadata(user_directory, site_id)
 # Filter photos to the time and date range specified in _targets_user.R
 photo_exif_filt <- photo_exif |>
   filter(
-    hms::as_hms(datetime) >= hms::as_hms(time_start) & hms::as_hms(datetime) < hms::as_hms(time_end)) |>
+    hms::as_hms(datetime) >= hms::as_hms(time_start) & hms::as_hms(datetime) <= hms::as_hms(time_end)) |>
   filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
 
 # note how many photos in full dataset vs. filt dataset:
@@ -125,10 +125,13 @@ ggplot() +
   theme_light()
 
 # specify mask type if using something different than in _targets_user
-mask_type <- "WA_01_03"
+mask_type <- "WA_01_04"
+
+# specify the time filter for filename (timestart_timeend_datestart_dateend)
+(timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}"))
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = "1100-1300", chunk_size = 50, parallel = TRUE)
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = TRUE)
 
 # Plot --------------------------------------------------------------------
 
@@ -137,9 +140,14 @@ library(ggimage)
 library(plotly)
 source("_targets_user.R")
 
-# Load the Data
-timefilt <- "1100-1300"
-mask_type <- "WA_01_03"
+# set parameters based on _targets_user.R
+timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}")
+
+# manually
+#timefilt <- "1100-1300"
+mask_type <- "WA_01_04"
+
+# load the data
 df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
 
 # try a second mask on top
@@ -162,7 +170,7 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
          subtitle= glue("(Mask: {mask_type})"),
          x="") +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = 0.14),
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = 0.5),
       aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.55)
 }
 
@@ -171,4 +179,3 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
 
 # interactive plotly
 ggplotly(gg1)
-
