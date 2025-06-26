@@ -2,7 +2,7 @@ Code to processing timelapse imagery for landscape change analysis (phenology/se
 
 This is part of the California Environmental Monitoring and Assessment Project (CEMAP).
 
-This is a pilot project to use timelapse photography to document landscape change, phenology, and seasonality by taking photos every day at a set interval of time from a stationary location. Field methods are described here. The use of timelapse photography has been shown to be a suitable approach for monitoring ecosystem change. The code in this repository is used to process imagery to rename photos, create timelapse videos, create regions of interest (draw polygons on photos), and extract and calculate RGB metrics including gcc, rcc, GRVI, excess greenness, etc from each photo based on the region of interest. 
+This is a pilot project to use timelapse photography to document landscape change, phenology, and seasonality by taking photos every day at a set interval of time from a stationary location. The use of timelapse photography has been shown to be a suitable approach for monitoring ecosystem change. The code in this repository is used to process imagery to rename photos, create timelapse videos, create regions of interest (draw polygons on photos), and extract and calculate RGB metrics including gcc, rcc, GRVI, excess greenness, etc from each photo based on the region of interest. 
 
 All code within is a work in progress.
 
