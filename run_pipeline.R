@@ -39,6 +39,7 @@ tar_visnetwork(targets_only = TRUE)
 
 ## 5. Rename Photos ----------------------------------------------------------
 
+source("_targets_user.R")
 # now rename photos...this script does this interactively and will log what happened
 source("R/rename_photos_interactive.R")
 

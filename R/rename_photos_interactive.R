@@ -10,10 +10,11 @@ rename_photos_safely <- function(cam_default_img_name = "RCNX") {
   library(stringr)
 
   # create log dir and load names/params
-  fs::dir_create("logs")
+
+  fs::dir_create(glue("{fs::path_dir(user_directory)}/logs"))
   source("_targets_user.R")
   ph_folder <- as.character(fs::path_file(user_directory))
-  log_file <- glue("logs/rename_log_{site_id}_{ph_folder}.txt")
+  log_file <- glue("{fs::path_dir(user_directory)}/logs/rename_log_{site_id}_{ph_folder}.txt")
 
   # make log message function
   log_message <- function(msg, timestamp = TRUE) {
@@ -55,7 +56,7 @@ rename_photos_safely <- function(cam_default_img_name = "RCNX") {
     log_message(glue("❌ {nrow(unmatched)} photo(s) in metadata could not be matched to files."))
 
     # Optionally write to a separate log for inspection
-    unmatched_log_path <- glue("logs/unmatched_{site_id}_{ph_folder}.csv")
+    unmatched_log_path <- glue("{fs::path_dir(user_directory)}/logs/unmatched_{site_id}_{ph_folder}.csv")
     readr::write_csv(unmatched, unmatched_log_path)
     log_message(glue("Unmatched metadata saved to: {unmatched_log_path}"))
 
