@@ -16,6 +16,10 @@ source("set_photo_dir.R")
 
 ## 3. Test and Visualize Pipeline ------------------------------------------
 
+# need to check/install exiftools.
+# download, then install.packages("exiftoolr")
+# then: exiftoolr::install_exiftool(local_exiftool = path_to_exif_zip)
+
 # this will show a visual of the pipeline. Helpful to see/identify issues.
 
 # visualize
@@ -30,9 +34,9 @@ tar_make() # this defaults to _targets.R
 ## 4b. IF YOU HAVE >1000 photos, you can try to run things in parallel. This helps
 # speed things up. This should work on any computer.
 # With future (multisession/local multicore)
-#library(future)
-#plan(multisession)
-#tar_make_future()
+library(future)
+plan(multisession)
+tar_make_future()
 
 # rerun to check status and see if it worked?
 tar_visnetwork(targets_only = TRUE)
@@ -65,7 +69,7 @@ ggplot(data=photo_exif, aes(x=datetime, y=image_height)) +
   geom_line(color="gray") +
   geom_point(pch=16, color=alpha("orange",0.7), size=4) +
   labs(x="", y="Image Height (px)") +
-  scale_x_datetime(date_breaks = "2 months", date_labels = "%b-%y") +
+  scale_x_datetime(date_breaks = "1 week", date_labels = "%b-%d-%y") +
   theme_light()
 
 # Filter photos to the time and date range specified in _targets_user.R
