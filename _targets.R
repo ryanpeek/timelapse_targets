@@ -3,31 +3,20 @@
 
 # USER PARAMETERS FROM _targets_user.R ------------------------------------
 # source user parameters
-if (file.exists("_targets_user.R")) {
-  source("_targets_user.R")
+if (file.exists("user_parameters.R")) {
+  source("user_parameters.R")
 } else {
-  stop("Missing _targets_user.R file with your user parameters")
+  stop("Missing user_parameters.R file with your user parameters")
 }
 
-# Packages ----------------------------------------------------------------
 
-library(targets)
-library(tarchetypes)
-library(tidyverse)
-library(fs)
-library(exiftoolr)
-library(janitor)
-library(digest)
-library(glue)
-library(hms)
+# Load Packages and Functions ---------------------------------------------
 
-# Set options for reproducibility and packages
-tar_option_set(
-  packages = c("tidyverse", "fs", "exiftoolr", "janitor", "digest", "glue", "hms", "magick")
-)
+# load all packages
+source("R/packages.R")
 
-# Source custom functions from the "R/" directory
-purrr::walk(list.files("R", full.names = TRUE), source)
+# load all functions (start with "f_")
+purrr::walk(list.files("R", pattern = "^f_",full.names = TRUE), source)
 
 
 # Main Pipeline to Process Images -----------------------------------------

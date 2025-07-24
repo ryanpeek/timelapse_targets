@@ -21,8 +21,8 @@ cat(glue::glue("Selected folder: {selected_dir}\n\n"))
 # Update Directory/Path in targets_user file ------------------------------
 
 # Load current _targets_user.R
-user_file <- "_targets_user.R"
-if (!file.exists(user_file)) stop("_targets_user.R not found")
+user_file <- "user_parameters.R"
+if (!file.exists(user_file)) stop("user_parameters.R not found")
 
 user_lines <- readLines(user_file)
 
@@ -63,4 +63,4 @@ if (any(grepl(pattern_site, user_lines))) {
 # Write updated file
 writeLines(user_lines, user_file)
 
-cat(glue("\n Site ID: {site_id} and photo directory updated in _targets_user.R\n"))
+cat(glue("\n Site ID: {site_id} and photo directory updated in user_parameters.R\n"))

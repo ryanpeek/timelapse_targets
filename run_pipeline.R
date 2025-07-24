@@ -1,78 +1,131 @@
+# Timelapse Imagery Processing Pipeline -------------------------------
+## Updated: 2025-07-24
+## Author: R. Peek
 
-# Load and run the pipeline
-library(targets)
+# this pipeline helps process timelapse camera imagery from raw game cameras.
+# to run, first we need to load/install packages. The automated workflow will:
+# - ask for photo directory
+# - extract metadata from imagery
+# - merge metadata with pre-existing imagery data if it exists
+# - generate a timelapse video if TRUE in user_parameters
 
-# RUNNING PIPELINE --------------------------------------------------------
+# The manual pipeline then starts from there:
+# - rename photos
+# - create regions of interest (ROI)
+# - generate metrics
+# - plot & explore metrics
 
-## 1. Set Photo Directory --------------------------------------------------
+# A: AUTOMATED PIPELINE --------------------------------------------------------
+
+# check for packages and load
+# note, this may take a minute or two the first time
+source("R/packages.R")
+
+## 0. Check exiftools is installed ---------------------
+
+## this process only needs to be done ONCE per R installation (version)
+
+## 1. Download the ExifTool Windows Executable (stand-alone) version (.zip) from here:
+
+## https://exiftool.org/, look for Windows Executable: exiftool-xx.xx.zip
+## Download to default downloads folder (i.e., Downloads/exiftool-12.87.zip)
+
+## 2. create path to the downloaded tool:
+
+## make sure the version number matches what you have Downloaded
+# path_to_exif_zip <- r'(C:\Users\USERNAME\Downloads\exiftool-12.99_64.zip)'
+
+## 3. Check path works!
+
+# if(fs::file_exists(path_to_exif_zip)=="TRUE") {
+#   print("Path is legit!")
+# } else( "Path is borked...double check")
+
+## 4. Now install
+
+## Install package:
+# install.packages("exiftoolr")
+# library(exiftoolr)
+## this only needs to be done once!
+# install_exiftool(local_exiftool = path_to_exif_zip)
+
+## Check EXIF works:
+# exif_version()
+# should get "Using ExifTool version XX.XX" and the version
+
+
+## 1. Set Photo Directory/Site ID -----------------------------------------
 
 # setup directory of photos:
+# navigate to folder and select ANY image in the folder
+# you plan to process imagery
 source("set_photo_dir.R")
-# navigate to folder and select image
 
-## 2. Set Site ID ----------------------------------------------------------
+## 2. Check Date-Time Parameters and Timelapse Video ------------------------------
 
-# Open the "_targets_user.R" file and add/revise the SITE_ID to match dir names
+# Open the "user_parameters.R" file:
+## verify the site ID and folders look correct
+## make any changes to date ranges and time window you want to process
+## change the timelapse video flag to TRUE / FALSE
 
-## 3. Test and Visualize Pipeline ------------------------------------------
+# if we make any changes, we need to reload them here:
+source("user_parameters.R")
 
-# need to check/install exiftools.
-# download, then install.packages("exiftoolr")
-# then: exiftoolr::install_exiftool(local_exiftool = path_to_exif_zip)
+## 3. Visualize & Run Pipeline ---------------------------------------------
 
 # this will show a visual of the pipeline. Helpful to see/identify issues.
 
 # visualize
-tar_visnetwork(targets_only = TRUE)
+tar_visnetwork(targets_only = TRUE) # all things should be blue
 
-## 4. Run Extract Photo Pipeline ---------------------------------------------
+# Run the pipeline (uses the "_targets.R" file by default)
+tar_make() # extracts metadata, merges metadata with preexisting metadata, and saves out.
 
-# Run the pipeline
-tar_make() # this defaults to _targets.R
-# this extracts metadata, merges metadata with preexisting metadata, and saves out.
-
-## 4b. IF YOU HAVE >1000 photos, you can try to run things in parallel. This helps
+## IF YOU HAVE >5000 photos, you can try to run things in parallel. This can help
 # speed things up. This should work on any computer.
 # With future (multisession/local multicore)
-library(future)
-plan(multisession)
-tar_make_future()
+# library(future)
+# plan(multisession)
+# tar_make_future()
 
 # rerun to check status and see if it worked?
-tar_visnetwork(targets_only = TRUE)
+tar_visnetwork(targets_only = TRUE) # all things should be green if success
+# if failure, it will stop at that step and be red
 
-## 5. Rename Photos ----------------------------------------------------------
+# B. Rename Photos ----------------------------------------------------------
 
-source("_targets_user.R")
-# now rename photos...this script does this interactively and will log what happened
+# now we rename photos (only needs to be done once)
+# DOES need to be run immediately after running the pipeline above
+
+source("user_parameters.R")
+
+# this script provides a log of how photos are renamed
 source("R/rename_photos_interactive.R")
-
-# this DOES need to be run immediately after using the tar_make() approach to
-# extract photo metadata
 
 # specify whatever the basename is that we need to rename from, RCNX, MOLT, IMG, etc
 rename_photos_safely(cam_default_img_name = "RCNX")
 
-## 6. Create ROI --------------------------------------------------------------
+# C. Create Region of Interest (ROI) --------------------------------------------------------------
 
-library(tidyverse)
-library(fs)
-library(glue)
-source("_targets_user.R")
+# now draw a region of interest on your photo for metric extraction
+source("user_parameters.R")
 source("R/create_polygon_roi.R")
 
-# site_id and photo directory loaded from _targets_user
+# site_id and photo directory loaded from user_parameters
 photo_exif <- load_photo_metadata(user_directory, site_id)
 
 # see what the time span looks like and if image has shifted
+# expect line to be horizontal an largely unbroken
 ggplot(data=photo_exif, aes(x=datetime, y=image_height)) +
   geom_line(color="gray") +
   geom_point(pch=16, color=alpha("orange",0.7), size=4) +
   labs(x="", y="Image Height (px)") +
-  scale_x_datetime(date_breaks = "1 week", date_labels = "%b-%d-%y") +
+  scale_x_datetime(date_breaks = "1 month", date_labels = "%b-%d-%y") +
   theme_light()
 
-# Filter photos to the time and date range specified in _targets_user.R
+# Filter photos to the time and date range specified in user_parameters.R
+# this helps reduce processing. You can always extract for
+# every photo if you want by using the full "photo_exif"
 photo_exif_filt <- photo_exif |>
   filter(
     hms::as_hms(datetime) >= hms::as_hms(time_start) & hms::as_hms(datetime) <= hms::as_hms(time_end)) |>
@@ -82,35 +135,42 @@ photo_exif_filt <- photo_exif |>
 nrow(photo_exif)
 nrow(photo_exif_filt)
 
-# specify mask type if using something different than in _targets_user
-mask_type <- "WA_01_04"
+# specify mask type if using something different than in user_parameters
+mask_type
+# change if you want something new/different
+## mask_type <- "WA_01_01"
 
-# Now draw on the photo:
+# Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
 make_polygon_roi(photo_exif_filt, index = 8, mask_type = mask_type, user_directory, overwrite = TRUE)
 
-# check how many pixels the mask has?
-source("R/count_masked_pixels.R")
+# should return a pixel count. If you need to abort and restart, just hit escape, and rerun the make_polygon_roi() function.
 
-# run function
+# check how many pixels the mask has?
+source("R/f_count_masked_pixels.R")
+
+# this will count the total pixels in the mask, and provide a gridded plot
+# of the ROI to get a sense of density of pixels.
+# use save_plot = TRUE to save this out if you prefer.
 count_masked_pixels(
   photo_path = glue("{exif_directory}/{photo_exif_filt$file_folder[1]}/{photo_exif_filt$pheno_name[1]}"),
   mask_path = glue("{exif_directory}/ROI/{site_id}_{mask_type}.tif"),
   mask_type, save_plot = FALSE)
 
 
-## 7. Generate Metrics ------------------------------------------------------
+# D. Generate Metrics ------------------------------------------------------
 
-library(tidyverse)
+# can start pipeline here too:
+source("R/packages.R")
 
-# make sure to check params in targets_user
-source("_targets_user.R")
-source("R/load_photo_metadata.R")
-source("rgb_metrics/run_rgb_parallel.R")
+# make sure to check parameters in user_parameters
+source("user_parameters.R")
+source("R/f_load_photo_metadata.R")
+source("R/run_rgb_parallel.R")
 
 # site_id and photo directory loaded "latest.csv.gz"
 photo_exif <- load_photo_metadata(user_directory, site_id)
 
-# Filter photos to the time and date range specified in _targets_user.R
+# Filter photos to the time and date range specified in user_parameters.R
 photo_exif_filt <- photo_exif |>
   filter(
     hms::as_hms(datetime) >= hms::as_hms(time_start) & hms::as_hms(datetime) <= hms::as_hms(time_end)) |>
@@ -129,34 +189,38 @@ ggplot() +
   scale_x_datetime(date_breaks = "2 months", date_labels = "%b-%y") +
   theme_light()
 
-# specify mask type if using something different than in _targets_user
-mask_type <- "WA_01_04"
+# specify ROI type if using something different than in user_parameters
+mask_type
+#mask_type <- "WA_01_01"
 
 # specify the time filter for filename (timestart_timeend_datestart_dateend)
 (timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}"))
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
+# chunk size can vary but ~100 is best
 df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = TRUE)
 
-# Plot --------------------------------------------------------------------
+# E. Plot ---------------------------------------------------------------
 
-library(tidyverse)
-library(ggimage)
-library(plotly)
-source("_targets_user.R")
+# can also start here with pipeline
 
-# set parameters based on _targets_user.R
+source("R/packages.R")
+source("user_parameters.R")
+
+# set parameters based on user_parameters.R
 timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}")
 
+# check ROI mask type you are using from user_parameters
+mask_type
+
 # manually
-#timefilt <- "1100-1300"
-mask_type <- "WA_01_04"
+# mask_type <- "GR_01_01"
 
 # load the data
 df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
 
-# try a second mask on top
-photo_date_location <- max(df$datetime)-days(4)
+# where image will be on top
+photo_date_location <- max(df$datetime)-days(10)
 
 # plot function with basic settings
 ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
@@ -175,12 +239,19 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
          subtitle= glue("(Mask: {mask_type})"),
          x="") +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = 0.5),
-      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.55)
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = 0.25),
+      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
 # to use function, specify the data, the x, and y, with no quotes:
+
+# Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR
 (gg1 <- ph_gg(df, datetime, rcc, mask_type, site_id))
+
+# save out:
+fs::dir_create(glue("{exif_directory}/figs"))
+ggsave(glue("{exif_directory}/figs/grvi_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+
 
 # interactive plotly
 ggplotly(gg1)

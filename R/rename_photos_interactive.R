@@ -12,7 +12,7 @@ rename_photos_safely <- function(cam_default_img_name = "RCNX") {
   # create log dir and load names/params
 
   fs::dir_create(glue("{fs::path_dir(user_directory)}/logs"))
-  source("_targets_user.R")
+  source("user_parameters.R")
   ph_folder <- as.character(fs::path_file(user_directory))
   log_file <- glue("{fs::path_dir(user_directory)}/logs/rename_log_{site_id}_{ph_folder}.txt")
 

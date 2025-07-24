@@ -3,7 +3,7 @@ library(terra)
 library(fs)
 library(glue)
 
-source("R/load_photo_metadata.R")
+source("R/f_load_photo_metadata.R")
 
 # draw a polygon function
 draw_poly_roi <- function (col = "#80303080", lty = 1, ...) {
