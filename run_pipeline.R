@@ -109,6 +109,7 @@ rename_photos_safely(cam_default_img_name = "RCNX")
 
 # now draw a region of interest on your photo for metric extraction
 source("user_parameters.R")
+source("R/packages.R")
 source("R/create_polygon_roi.R")
 
 # site_id and photo directory loaded from user_parameters
@@ -141,7 +142,7 @@ mask_type
 ## mask_type <- "WA_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
-make_polygon_roi(photo_exif_filt, index = 8, mask_type = mask_type, user_directory, overwrite = TRUE)
+make_polygon_roi(photo_exif_filt, index = 100, mask_type = mask_type, user_directory, overwrite = TRUE)
 
 # should return a pixel count. If you need to abort and restart, just hit escape, and rerun the make_polygon_roi() function.
 
@@ -246,11 +247,11 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
 # to use function, specify the data, the x, and y, with no quotes:
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR
-(gg1 <- ph_gg(df, datetime, rcc, mask_type, site_id))
+(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id))
 
 # save out:
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/grvi_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+ggsave(glue("{exif_directory}/figs/rcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
 
 
 # interactive plotly
