@@ -142,7 +142,7 @@ mask_type
 ## mask_type <- "WA_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
-make_polygon_roi(photo_exif_filt, index = 100, mask_type = mask_type, user_directory, overwrite = TRUE)
+make_polygon_roi(photo_exif_filt, index = 570, mask_type = mask_type, user_directory, overwrite = TRUE)
 
 # should return a pixel count. If you need to abort and restart, just hit escape, and rerun the make_polygon_roi() function.
 
