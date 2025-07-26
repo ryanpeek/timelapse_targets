@@ -92,20 +92,9 @@ tar_make() # extracts metadata, merges metadata with preexisting metadata, and s
 tar_visnetwork(targets_only = TRUE) # all things should be green if success
 # if failure, it will stop at that step and be red
 
-# B. Rename Photos ----------------------------------------------------------
+# B: INTERACTIVE PIPELINE ------------------------------
 
-# now we rename photos (only needs to be done once)
-# DOES need to be run immediately after running the pipeline above
-
-source("user_parameters.R")
-
-# this script provides a log of how photos are renamed
-source("R/rename_photos_interactive.R")
-
-# specify whatever the basename is that we need to rename from, RCNX, MOLT, IMG, etc
-rename_photos_safely(cam_default_img_name = "RCNX")
-
-# C. Create Region of Interest (ROI) --------------------------------------------------------------
+## 1. Create Region of Interest (ROI) -------------------------------------------------------------
 
 # now draw a region of interest on your photo for metric extraction
 source("user_parameters.R")
@@ -142,7 +131,7 @@ mask_type
 ## mask_type <- "WA_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
-make_polygon_roi(photo_exif_filt, index = 570, mask_type = mask_type, user_directory, overwrite = TRUE)
+make_polygon_roi(photo_exif_filt, index = 183, mask_type = mask_type, user_directory, overwrite = TRUE)
 
 # should return a pixel count. If you need to abort and restart, just hit escape, and rerun the make_polygon_roi() function.
 
@@ -158,7 +147,7 @@ count_masked_pixels(
   mask_type, save_plot = FALSE)
 
 
-# D. Generate Metrics ------------------------------------------------------
+## 2. Generate Metrics ------------------------------------------------------
 
 # can start pipeline here too:
 source("R/packages.R")
@@ -201,7 +190,7 @@ mask_type
 # chunk size can vary but ~100 is best
 df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = TRUE)
 
-# E. Plot ---------------------------------------------------------------
+## 3. Plot ---------------------------------------------------------------
 
 # can also start here with pipeline
 
@@ -240,18 +229,18 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
          subtitle= glue("(Mask: {mask_type})"),
          x="") +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = 0.25),
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = 0.35),
       aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
 # to use function, specify the data, the x, and y, with no quotes:
 
-# Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR
-(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id))
+# Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
+(gg1 <- ph_gg(df, datetime, rcc, mask_type, site_id))
 
 # save out:
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/rcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+ggsave(glue("{exif_directory}/figs/bcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
 
 
 # interactive plotly
