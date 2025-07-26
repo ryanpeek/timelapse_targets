@@ -35,27 +35,6 @@ core_targets <-
       #cue = tar_cue(mode = "always")  # force re-run every time
     ),
 
-    # this is more complicated to process multiple folders down the road
-    # tar_target(
-    #   unprocessed_folders,
-    #   {
-    #
-    #     folder_paths <- fs::dir_ls(fs::path_dir(photo_directory), type="directory")
-    #     folder_dates <- fs::path_file(folder_paths)
-    #     # only keep dates that are YYYYMMDD
-    #     is_date_folder <- grepl("^\\d{8}$", folder_dates)
-    #     # now filter
-    #     folder_paths <- folder_paths[is_date_folder]
-    #     folder_dates <- folder_dates[is_date_folder]
-    #
-    #     expected_csvs <- glue("pheno_exif_{site_id}_{folder_dates}.csv.gz")
-    #     csv_paths <- fs::path(path_dir(photo_directory), expected_csvs)
-    #
-    #     # only list dir where we are missing dir
-    #     folder_paths[!fs::file_exists(csv_paths)]
-    #   }
-    # ),
-
     # this is just to check if folder already processed
     tar_target(
       exif_csv_path,
@@ -140,6 +119,11 @@ core_targets <-
       save_metadata,
       save_merged_metadata(merged_metadata, photo_metadata, photo_directory, site_id),
       format = "file"
+    ),
+
+    tar_target(
+      rename_photos,
+      rename_photos_safely(photo_metadata, cam_default_img_name = "RCNX")
     )
   )
 

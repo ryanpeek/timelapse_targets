@@ -1,5 +1,5 @@
 # Rename photos safely based on metadata and user confirmation
-rename_photos_safely <- function(cam_default_img_name = "RCNX") {
+rename_photos_safely <- function(photo_metadata, cam_default_img_name = "RCNX") {
 
   # libraries
   library(dplyr)
@@ -25,8 +25,8 @@ rename_photos_safely <- function(cam_default_img_name = "RCNX") {
 
   # check if photos have been renamed
   default_named <- fs::dir_info(user_directory, type = "file", recurse = TRUE) |>
-    mutate(filename = path_file(path)) |>
-    filter(str_detect(filename, glue("^{cam_default_img_name}")))
+    mutate(file_name = path_file(path)) |>
+    filter(str_detect(file_name, glue("^{cam_default_img_name}")))
 
   # get a count and check if done already
   if (nrow(default_named) == 0) {
@@ -35,21 +35,12 @@ rename_photos_safely <- function(cam_default_img_name = "RCNX") {
     return("already_renamed")
   }
 
-  # get metadata:
-  photo_metadata_path <- glue("{exif_directory}/pheno_exif_{site_id}_{ph_folder}.csv.gz")
-  photo_metadata <- read_csv(photo_metadata_path, show_col_types=FALSE)
-
-  # Rename column in file list to match
-  default_named <- default_named |>
-    mutate(filename = path_file(path)) |>
-    rename(full_path = path)
-
   # Join metadata to actual file list
   matched <- photo_metadata |>
-    left_join(default_named, by = c("full_path" = "filename"))
+    left_join(default_named, by = c("file_name"))
 
   # Identify unmatched
-  unmatched <- matched |> filter(is.na(full_path))
+  unmatched <- matched |> filter(is.na(path))
 
   if (nrow(unmatched) > 0) {
     log_message(glue("❌ {nrow(unmatched)} photo(s) in metadata could not be matched to files."))
@@ -58,17 +49,10 @@ rename_photos_safely <- function(cam_default_img_name = "RCNX") {
     # unmatched_log_path <- glue("{fs::path_dir(user_directory)}/logs/unmatched_{site_id}_{ph_folder}.csv")
     # readr::write_csv(unmatched, unmatched_log_path)
     # log_message(glue("Unmatched metadata saved to: {unmatched_log_path}"))
-
-    # Ask user whether to continue
-    response <- tolower(trimws(readline("Some photos in metadata could not be matched to actual files. Proceed with partial renaming? (yes/no): ")))
-    if (!response %in% c("yes", "y")) {
-      log_message("User chose not to proceed due to unmatched files.")
-      return("aborted_due_to_unmatched")
-    }
   }
 
   # Filter out only matched rows for renaming
-  matched <- matched |> filter(!is.na(full_path))
+  matched <- matched |> filter(!is.na(path))
 
   # create tally of dups
   duplicates_exist <- photo_metadata |>
@@ -77,14 +61,8 @@ rename_photos_safely <- function(cam_default_img_name = "RCNX") {
     filter(n > 1) |>
     nrow() > 0
 
-  response <- tolower(trimws(readline("Photos appear un-renamed. Proceed with renaming? (yes/no): ")))
-  if (!response %in% c("yes", "y")) {
-    log_message(glue("Logged: {Sys.time()} for {site_id} from directory {ph_folder}: User chose not to rename. Exiting."))
-    return("skipped_by_user")
-  }
-
   # count how many need to be renamed?
-  n_files <- nrow(photo_metadata)
+  n_files <- nrow(matched)
   log_message(glue("Logged: {Sys.time()} for {site_id} from directory {ph_folder}:"))
   log_message(glue("Preparing to rename {n_files} photo(s)..."))
 
