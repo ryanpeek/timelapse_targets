@@ -7,8 +7,8 @@ chunk_size <- 250
 make_timelapse_video <- FALSE # or change to FALSE
 
 # Date filter for videos:
-date_start <- as.Date("2024-04-01")
-date_end <- as.Date("2025-08-01") # or as "YYYY-MM-DD"
+date_start <- as.Date("2015-02-01")
+date_end <- as.Date("2018-08-01") # or as "YYYY-MM-DD"
 
 # Time filter for videos, 24HR format
 time_start <- "12:00:00"
@@ -20,6 +20,6 @@ mask_type <- "WA_01_01"
 # DO NOT CHANGE MANUALLY! -----------------------------
 # these are updated automatically using `source("set_photo_dir.R")`
 # select a photo inside the folder of interest
-user_directory <- "D:/TIMELAPSE_CRGP/BLRO-R3/20250602"
+user_directory <- "D:/TIMELAPSE_CWS/NFY-GDYR/20150814"
 exif_directory <- fs::path_dir(user_directory)
-site_id <- "BLRO-R3"
+site_id <- "NFY-GDYR"

@@ -110,7 +110,7 @@ ggplot(data=photo_exif, aes(x=datetime, y=image_height)) +
   geom_line(color="gray") +
   geom_point(pch=16, color=alpha("orange",0.7), size=4) +
   labs(x="", y="Image Height (px)") +
-  scale_x_datetime(date_breaks = "1 month", date_labels = "%b-%d-%y") +
+  scale_x_datetime(date_breaks = "2 month", date_labels = "%b-%y") +
   theme_light()
 
 # Filter photos to the time and date range specified in user_parameters.R
@@ -128,10 +128,10 @@ nrow(photo_exif_filt)
 # specify mask type if using something different than in user_parameters
 mask_type
 # change if you want something new/different
-## mask_type <- "WA_01_01"
+#mask_type <- "GR_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
-make_polygon_roi(photo_exif_filt, index = 183, mask_type = mask_type, user_directory, overwrite = TRUE)
+make_polygon_roi(photo_exif_filt, index = 1003, mask_type = mask_type, user_directory, overwrite = TRUE)
 
 # should return a pixel count. If you need to abort and restart, just hit escape, and rerun the make_polygon_roi() function.
 
@@ -181,14 +181,14 @@ ggplot() +
 
 # specify ROI type if using something different than in user_parameters
 mask_type
-#mask_type <- "WA_01_01"
+#mask_type <- "GR_01_01"
 
 # specify the time filter for filename (timestart_timeend_datestart_dateend)
 (timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}"))
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
 # chunk size can vary but ~100 is best
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = TRUE)
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = FALSE)
 
 ## 3. Plot ---------------------------------------------------------------
 
@@ -204,7 +204,7 @@ timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(
 mask_type
 
 # manually
-# mask_type <- "GR_01_01"
+#mask_type <- "GR_01_01"
 
 # load the data
 df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
@@ -224,24 +224,23 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
                fill="aquamarine4",
                alpha=0.6) +
     hrbrthemes::theme_ipsum_rc() +
-    scale_x_datetime(date_breaks = "1 months", date_labels = "%b-%y") +
+    scale_x_datetime(date_breaks = "2 months", date_labels = "%b-%d") +
     labs(title=glue("{site_id}"),
          subtitle= glue("(Mask: {mask_type})"),
          x="") +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = 0.35),
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .2),
       aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
 # to use function, specify the data, the x, and y, with no quotes:
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
-(gg1 <- ph_gg(df, datetime, rcc, mask_type, site_id))
+(gg1 <- ph_gg(df, datetime, gbR, mask_type, site_id))
 
 # save out:
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/bcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
-
+ggsave(glue("{exif_directory}/figs/grvi_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
 
 # interactive plotly
 ggplotly(gg1)

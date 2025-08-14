@@ -11,7 +11,7 @@ format_exif_metadata <- function(exif_data_chunk, site_id) {
     rename(
       file_path = directory,
       datetime = create_date,
-      exposure = exposure_time
+      #exposure = exposure_time
     ) |>
     filter(!is.na(datetime), !is.na(file_name)) |>
     mutate(
