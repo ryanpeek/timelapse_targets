@@ -123,7 +123,7 @@ core_targets <-
 
     tar_target(
       rename_photos,
-      rename_photos_safely(photo_metadata, cam_default_img_name = "MFD")
+      rename_photos_safely(photo_metadata, cam_default_img_name = "RCNX")
     )
   )
 

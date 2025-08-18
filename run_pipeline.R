@@ -131,7 +131,7 @@ mask_type
 #mask_type <- "GR_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
-make_polygon_roi(photo_exif_filt, index = 1003, mask_type = mask_type, user_directory, overwrite = TRUE)
+make_polygon_roi(photo_exif_filt, index = 1, mask_type = mask_type, user_directory, overwrite = TRUE)
 
 # should return a pixel count. If you need to abort and restart, just hit escape, and rerun the make_polygon_roi() function.
 
@@ -224,23 +224,25 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
                fill="aquamarine4",
                alpha=0.6) +
     hrbrthemes::theme_ipsum_rc() +
-    scale_x_datetime(date_breaks = "2 months", date_labels = "%b-%d") +
+    #scale_y_continuous(limits=c(0.32, 0.45))+
+    scale_x_datetime(date_breaks = "2 weeks", date_labels = "%b-%d") +
     labs(title=glue("{site_id}"),
          subtitle= glue("(Mask: {mask_type})"),
          x="") +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .2),
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .35),
       aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
 # to use function, specify the data, the x, and y, with no quotes:
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
-(gg1 <- ph_gg(df, datetime, gbR, mask_type, site_id))
+
+(gg1 <- ph_gg(df, datetime, gcc, mask_type, site_id))
 
 # save out:
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/grvi_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+ggsave(glue("{exif_directory}/figs/gcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
 
 # interactive plotly
 ggplotly(gg1)
