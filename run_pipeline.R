@@ -230,7 +230,7 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
          subtitle= glue("(Mask: {mask_type})"),
          x="") +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .35),
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .04),
       aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
@@ -238,11 +238,12 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, gcc, mask_type, site_id))
+(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id))
+
 
 # save out:
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/gcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+ggsave(glue("{exif_directory}/figs/grvi_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
 
 # interactive plotly
 ggplotly(gg1)
