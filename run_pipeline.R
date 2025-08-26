@@ -247,3 +247,11 @@ ggsave(glue("{exif_directory}/figs/grvi_{site_id}_{mask_type}_midday.png"), widt
 
 # interactive plotly
 ggplotly(gg1)
+
+
+# find earliest (lowest val):
+df |> mutate(mon = month(datetime)) |>
+  slice_min(GRVI, by=mon) |>
+  select(datetime, GRVI, gcc, exG, gbR, rcc)
+
+
