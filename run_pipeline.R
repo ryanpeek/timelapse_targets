@@ -128,7 +128,7 @@ nrow(photo_exif_filt)
 # specify mask type if using something different than in user_parameters
 mask_type
 # change if you want something new/different
-#mask_type <- "GR_01_01"
+mask_type <- "WA_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
 make_polygon_roi(photo_exif_filt, index = 200, mask_type = mask_type, user_directory, overwrite = TRUE)
@@ -181,14 +181,14 @@ ggplot() +
 
 # specify ROI type if using something different than in user_parameters
 mask_type
-mask_type <- "DB_01_01"
+mask_type <- "WA_01_01"
 
 # specify the time filter for filename (timestart_timeend_datestart_dateend)
 (timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}"))
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
 # chunk size can vary but ~100 is best
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = TRUE)
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = FALSE)
 
 ## 3. Plot ---------------------------------------------------------------
 
@@ -204,7 +204,7 @@ timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(
 mask_type
 
 # manually
-#mask_type <- "GR_01_01"
+mask_type <- "WA_01_01"
 
 # load the data
 df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
@@ -213,7 +213,7 @@ df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{
 photo_date_location <- max(df$datetime)-days(14)
 
 # plot function with basic settings
-ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
+ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
   ggplot() +
     geom_smooth(data=data,
                 aes(x={{x_var}}, y={{pheno_var}}), method = "gam") +
@@ -231,7 +231,7 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
          subtitle= glue("(Mask: {mask_type})"),
          x="") +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .3),
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = img_var_y),
       aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
@@ -239,12 +239,12 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, rcc, mask_type, site_id))
+(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id, -0.1))
 
 
 # save out:
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/grvi_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+ggsave(glue("{exif_directory}/figs/bcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
 
 # interactive plotly
 ggplotly(gg1)
