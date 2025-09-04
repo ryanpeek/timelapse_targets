@@ -210,7 +210,7 @@ mask_type
 df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
 
 # where image will be on top
-photo_date_location <- max(df$datetime)-days(10)
+photo_date_location <- max(df$datetime)-days(14)
 
 # plot function with basic settings
 ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
@@ -225,12 +225,12 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
                alpha=0.6) +
     hrbrthemes::theme_ipsum_rc() +
     #scale_y_continuous(limits=c(0.32, 0.45))+
-    scale_x_datetime(date_breaks = "2 weeks", date_labels = "%b-%d") +
+    scale_x_datetime(date_breaks = "1 month", date_labels = "%b-%d") +
     labs(title=glue("{site_id}"),
          subtitle= glue("(Mask: {mask_type})"),
          x="") +
     geom_image(
-      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = .04),
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = 10),
       aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
@@ -238,12 +238,12 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id){
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id))
+(gg1 <- ph_gg(df, datetime, exG, mask_type, site_id))
 
 
 # save out:
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/grvi_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+ggsave(glue("{exif_directory}/figs/exG_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
 
 # interactive plotly
 ggplotly(gg1)
