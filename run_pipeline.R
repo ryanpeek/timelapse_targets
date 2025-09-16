@@ -15,12 +15,6 @@
 # - generate metrics
 # - plot & explore metrics
 
-# A: AUTOMATED PIPELINE --------------------------------------------------------
-
-# check for packages and load
-# note, this may take a minute or two the first time
-source("R/packages.R")
-
 ## 0. Check exiftools is installed ---------------------
 
 ## this process only needs to be done ONCE per R installation (version)
@@ -53,6 +47,12 @@ source("R/packages.R")
 # exif_version()
 # should get "Using ExifTool version XX.XX" and the version
 
+
+# A: AUTOMATED PIPELINE --------------------------------------------------------
+
+# check for packages and load
+# note, this may take a minute or two the first time
+source("R/packages.R")
 
 ## 1. Set Photo Directory/Site ID -----------------------------------------
 
@@ -128,7 +128,7 @@ nrow(photo_exif_filt)
 # specify mask type if using something different than in user_parameters
 mask_type
 # change if you want something new/different
-mask_type <- "WA_01_01"
+#mask_type <- "WA_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
 make_polygon_roi(photo_exif_filt, index = 200, mask_type = mask_type, user_directory, overwrite = TRUE)
@@ -181,14 +181,14 @@ ggplot() +
 
 # specify ROI type if using something different than in user_parameters
 mask_type
-mask_type <- "WA_01_01"
+#mask_type <- "WA_01_01"
 
 # specify the time filter for filename (timestart_timeend_datestart_dateend)
 (timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}"))
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
 # chunk size can vary but ~100 is best
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = FALSE)
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = TRUE)
 
 ## 3. Plot ---------------------------------------------------------------
 
@@ -204,7 +204,7 @@ timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(
 mask_type
 
 # manually
-mask_type <- "WA_01_01"
+#mask_type <- "WA_01_01"
 
 # load the data
 df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
@@ -232,19 +232,18 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
          x="") +
     geom_image(
       data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = img_var_y),
-      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
+      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.45)
 }
 
 # to use function, specify the data, the x, and y, with no quotes:
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id, -0.1))
-
+(gg1 <- ph_gg(df, datetime, exG, mask_type, site_id, 35))
 
 # save out:
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/bcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+ggsave(glue("{exif_directory}/figs/exG_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
 
 # interactive plotly
 ggplotly(gg1)
