@@ -127,11 +127,22 @@ nrow(photo_exif_filt)
 
 # specify mask type if using something different than in user_parameters
 mask_type
+# if photo field of view and frame is identical to previous set,
+# and adding new ROI of same type, use _01_02
+# if field of focus/view has shifted, use _02_01
+
 # change if you want something new/different
 #mask_type <- "WA_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
-make_polygon_roi(photo_exif_filt, index = 200, mask_type = mask_type, user_directory, overwrite = TRUE)
+make_polygon_roi(photo_exif_filt, index = 25, mask_type = mask_type, user_directory, overwrite = TRUE)
+
+## IMPORTANT NOTE: RSTUDIO HAS A GLITCH THAT CAUSES ORTHOGONAL SHIFT IN
+## DRAWN POLYGON. TO AVOID TRY ONE OF FOLLOWING:
+# - use View > Actual Size
+# - On Windows: use a X11 window: x11() then run function above
+# - On macosx: use a quartz window: quartz() then run function above
+
 
 # should return a pixel count. If you need to abort and restart, just hit escape, and rerun the make_polygon_roi() function.
 
@@ -188,7 +199,7 @@ mask_type
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
 # chunk size can vary but ~100 is best
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 100, parallel = TRUE)
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 150, parallel = FALSE)
 
 ## 3. Plot ---------------------------------------------------------------
 
@@ -239,11 +250,11 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, exG, mask_type, site_id, 35))
+(gg1 <- ph_gg(df, datetime, bcc, mask_type, site_id, .35))
 
 # save out:
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/exG_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+ggsave(glue("{exif_directory}/figs/bcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
 
 # interactive plotly
 ggplotly(gg1)
