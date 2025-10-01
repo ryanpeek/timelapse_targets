@@ -81,15 +81,16 @@ tar_visnetwork(targets_only = TRUE) # all things should be blue
 # Run the pipeline (uses the "_targets.R" file by default)
 tar_make() # extracts metadata, merges metadata with preexisting metadata, and saves out.
 
-## IF YOU HAVE >5000 photos, you can try to run things in parallel. This can help
-# speed things up. This should work on any computer.
-# With future (multisession/local multicore)
-# library(future)
-# plan(multisession)
-# tar_make_future()
+### To Force Rename Photos:
+# We need to delete the pheno_exif output files for the specific date (pheno_exif_SITE_ID_YYYYMMDD.csv.gz and pheno_exif_SITE_ID_latest.csv.gz)
+# Then rename a single photo in the folder of interest with "RCNX" at the start.
+# Then we need to delete the metadata associated with our pipeline with tar_destroy()
+# it's ok! we can rerun and regenerate everything. Select "yes" (1) and hit enter.
+# rerun tar_make() and it will regenerate everything!
 
 # rerun to check status and see if it worked?
-tar_visnetwork(targets_only = TRUE) # all things should be green if success
+tar_visnetwork(targets_only = TRUE)
+# all things should be green if success
 # if failure, it will stop at that step and be red
 
 # B: INTERACTIVE PIPELINE ------------------------------
