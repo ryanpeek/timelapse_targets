@@ -220,8 +220,8 @@ mask_type
 # load the data
 df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
 
-# where image will be on top
-photo_date_location <- max(df$datetime)-days(14)
+# where image will be on top, change days if long time series
+photo_date_location <- max(df$datetime)-days(20)
 
 # plot function with basic settings
 ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
@@ -234,7 +234,8 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
                size=3, pch=21,
                fill="aquamarine4",
                alpha=0.6) +
-    hrbrthemes::theme_ipsum_rc() +
+    cowplot::theme_half_open() + cowplot::background_grid(major=c("xy"))+
+    #hrbrthemes::theme_ipsum_rc() +
     theme(axis.text.x = element_text(angle = -90, vjust = 0.5, hjust = 1)) +
     #scale_y_continuous(limits=c(0.32, 0.45))+
     scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%d-%y") +
@@ -243,26 +244,34 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
          x="") +
     geom_image(
       data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = img_var_y),
-      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.45)
+      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
 }
 
 # to use function, specify the data, the x, and y, with no quotes:
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, bcc, mask_type, site_id, .35))
+(gg1 <- ph_gg(df, datetime, exG, mask_type, site_id, 20))
 
 # save out:
+varname <- "exG"
 fs::dir_create(glue("{exif_directory}/figs"))
-ggsave(glue("{exif_directory}/figs/bcc_{site_id}_{mask_type}_midday.png"), width = 10, height = 8, dpi = 300, bg = "white")
+ggsave(glue("{exif_directory}/figs/{varname}_{site_id}_{mask_type}_midday.png"), width = 11, height = 8.5, dpi = 300, bg = "white")
 
 # interactive plotly
-ggplotly(gg1)
-
+#ggplotly(gg1)
 
 # find earliest (lowest val):
-df |> mutate(mon = month(datetime)) |>
-  slice_min(GRVI, by=mon) |>
-  select(datetime, GRVI, gcc, exG, gbR, rcc)
+df |>
+  mutate(yr = year(datetime), mon = month(datetime), wk = week(datetime)) |>
+  slice_min(GRVI, by=c(yr), n=2) |> # top 2 results
+  select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc) |>
+  View()
 
+# find latest (highest)
+df |>
+  mutate(yr = year(datetime), mon = month(datetime), wk = week(datetime)) |>
+  slice_max(bcc, by=c(yr), prop=.02) |> # top 2%
+  select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc) |>
+  View()
 

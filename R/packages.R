@@ -18,10 +18,11 @@ pacman::p_load(
   magick, # photo/video tools
   av, # video tools
   hms, # time stamp managing
-  hrbrthemes, # ggplot themes
-  ggimage, # adding images to ggplot
-  plotly, # interactive plotting
-  pacman # package manager
+  #hrbrthemes, # ggplot themes
+  cowplot, # ggplot themes
+  ggimage # adding images to ggplot
+  #plotly # interactive plotting
+  #pacman # package manager
   )
 
 tar_option_set(
