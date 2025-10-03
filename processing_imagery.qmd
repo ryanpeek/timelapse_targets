@@ -1,11 +1,13 @@
 ---
 title: "Processing Timelapse Imagery"
 format:
-  pdf:
-    toc: false
   html:
     toc: true
     embed-resources: true
+  pdf:
+    toc: false
+  gfm: 
+    toc: true
 ---
 
 
@@ -304,6 +306,8 @@ When complete, the resulting information printed in the console should show the 
 
 Finally we can use these ROI's to extract various metrics based on the RGB pixel values. As above, we load our parameters and functions, and filter to the timeframe of interest. We can change these values quickly by editing the `user_parameters.R` file.
 
+We also load the extraction functions. 
+
 ```{r}
 #| echo: true
 #| eval: false
@@ -330,3 +334,108 @@ nrow(photo_exif)
 nrow(photo_exif_filt)
 
 ```
+
+
+The next important steps are to triple check the time range is what you expect, and the ROI mask is what you want. We can always go back and create additional ROIs, and we can manually specify the mask (ROI) we want to use for extraction in the `user_parameters.R` file.
+
+```{r}
+#| echo: true
+#| eval: false
+
+# Check the ROI mask we are using:
+mask_type
+
+# or manually specify something different than in user_parameters.R file
+# mask_type <- "WA_01_01"
+
+# specify the time filter for filename (timestart_timeend_datestart_dateend)
+(timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}"))
+
+# On Windows, best to use parallel=FALSE
+# On non-Windows, use "parallel=TRUE" for fastest results.
+df <- extract_rgb_parallel(site_id, 
+                           mask_type, 
+                           exif_directory, 
+                           photo_exif_filt, 
+                           timefilt = timefilt, 
+                           chunk_size = 150, 
+                           parallel = FALSE)
+```
+
+
+::: {.callout-caution }
+
+**Important:** Metric extraction from large photo sets can take some time (5-10 min for 5-10k photos) particularly when not running in parallel. Plan to grab a coffee or take a quick walk.
+
+We can increase the `chunk_size` (how many photos are extracted at once), but around 150-200 seems to be optimal.
+
+:::
+
+Here is what it should look like while running:
+
+![](img/extracting_metrics.png)
+
+We can also verify a new file in our SITEID photo directory when complete. A new `pheno_metrics_{SITEID}_{MASK}_{time_duration}_{startdate}_{enddate}.csv.gz` file should appear, where the appropriate values are used in naming the file.
+
+We can then use that to generate some plots, analysis etc! 
+
+## Plotting Metrics
+
+We can load our recently extracted data, or set the `user_parameters.R` to match a previously run dataset. Make sure the mask ROI, the start/end dates, and time ranges correspond with the specific file name of interest.
+
+```{r}
+#| echo: true
+#| eval: false
+
+source("R/packages.R")
+source("user_parameters.R")
+
+# set parameters based on user_parameters.R
+timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}")
+
+# check ROI mask type you are using from user_parameters
+mask_type
+
+# load the data
+df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
+
+# where image will be on top, change days if long time series
+photo_date_location <- max(df$datetime)-days(20)
+
+# plot function with basic settings
+ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
+  ggplot() +
+    geom_smooth(data=data,
+                aes(x={{x_var}}, y={{pheno_var}}), method = "gam") +
+    geom_point(data=data,
+               aes(x={{x_var}}, y={{pheno_var}}),
+               size=3, pch=21,
+               fill="aquamarine4",
+               alpha=0.6) +
+    cowplot::theme_half_open() + cowplot::background_grid(major=c("xy"))+
+    theme(axis.text.x = element_text(angle = -90, vjust = 0.5, hjust = 1)) +
+    scale_x_datetime(date_breaks = "2 month", date_labels = "%m-%d-%y") +
+    labs(title=glue("{site_id}"),
+         subtitle= glue("(Mask: {mask_type})"),
+         x="") +
+    geom_image(
+      data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = img_var_y),
+      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.5)
+}
+
+# to use function, specify the data, the x, and y, with no quotes:
+# Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
+
+(gg1 <- ph_gg(df, datetime, exG, mask_type, site_id, 20))
+
+# save out:
+varname <- "exG"
+fs::dir_create(glue("{exif_directory}/figs"))
+ggsave(glue("{exif_directory}/figs/{varname}_{site_id}_{mask_type}_midday.png"), 
+       width = 11, height = 8.5, dpi = 300, bg = "white")
+
+```
+
+The function above can be rerun quickly, and we can adjust the location of our overlay image as preferred. This is just one simple approach to using these data. Have fun!
+
+![](img/gcc_SAHE1_GR_01_01_midday.jpg)
