@@ -1,8 +1,8 @@
 ---
 title: "Processing Timelapse Imagery"
 format:
-#  pdf:
-#    toc: false
+  pdf:
+    toc: false
   html:
     toc: true
     embed-resources: true
