@@ -17,7 +17,7 @@ load_photo_metadata <- function(photo_dir = NULL, site_id = NULL) {
   photo_exif <- if (file_exists(csv_path_complete)) {
     read_csv(csv_path_complete)
   } else {
-    read_csv(csv_path_partial)
+    read.csv(csv_path_partial)
   }
 
   return(photo_exif)
