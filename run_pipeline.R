@@ -252,7 +252,7 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id, .23))
+(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id, .05))
 
 # save out:
 varname <- "GRVI"
