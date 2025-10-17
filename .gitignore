@@ -13,4 +13,5 @@ logs/
 sandbox/
 *html
 *pdf
-user_parameters.R # ignore unless required
+user_parameters.R
+run_pipeline.R
