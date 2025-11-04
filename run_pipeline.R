@@ -105,15 +105,6 @@ source("R/create_polygon_roi.R")
 # site_id and photo directory loaded from user_parameters
 photo_exif <- load_photo_metadata(user_directory, site_id)
 
-# see what the time span looks like and if image has shifted
-# expect line to be horizontal an largely unbroken
-ggplot(data=photo_exif, aes(x=datetime, y=image_height)) +
-  geom_line(color="gray") +
-  geom_point(pch=16, color=alpha("orange",0.7), size=4) +
-  labs(x="", y="Image Height (px)") +
-  scale_x_datetime(date_breaks = "2 month", date_labels = "%b-%y") +
-  theme_light()
-
 # Filter photos to the time and date range specified in user_parameters.R
 # this helps reduce processing. You can always extract for
 # every photo if you want by using the full "photo_exif"
@@ -121,6 +112,16 @@ photo_exif_filt <- photo_exif |>
   filter(
     hms::as_hms(datetime) >= hms::as_hms(time_start) & hms::as_hms(datetime) <= hms::as_hms(time_end)) |>
  filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
+
+# plot to highlight:
+# see what the time span looks like and if image has shifted
+ggplot() +
+  geom_line(data=photo_exif, aes(x=datetime, y=image_height), color="cyan4", lwd=2) +
+  geom_point(data=photo_exif_filt, aes(x=datetime, y=image_height), pch=16, color=alpha("orange",0.7), size=3) +
+  labs(x="", y="Image Height (px)", title="Selected Period for Extraction (orange)") +
+  scale_x_datetime(date_breaks = "2 months", date_labels = "%b-%y") +
+  theme_light()
+
 
 # note how many in full dataset vs. filt dataset:
 nrow(photo_exif)
@@ -136,7 +137,7 @@ mask_type
 #mask_type <- "WA_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
-make_polygon_roi(photo_exif_filt, index = 50, mask_type = mask_type, user_directory, overwrite = TRUE)
+make_polygon_roi(photo_exif_filt, index = 35, mask_type = mask_type, user_directory, overwrite = TRUE)
 
 ## IMPORTANT NOTE: RSTUDIO HAS A GLITCH THAT CAUSES ORTHOGONAL SHIFT IN
 ## DRAWN POLYGON. TO AVOID TRY ONE OF FOLLOWING:
@@ -200,7 +201,7 @@ mask_type
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
 # chunk size can vary but ~100 is best
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 150, parallel = TRUE)
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 150, parallel = FALSE)
 
 ## 3. Plot ---------------------------------------------------------------
 
@@ -252,27 +253,27 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id, .05))
+(gg1 <- ph_gg(df, datetime, gcc, mask_type, site_id, .44))
 
 # save out:
-varname <- "GRVI"
+varname <- "gcc"
 fs::dir_create(glue("{exif_directory}/figs"))
 ggsave(glue("{exif_directory}/figs/{varname}_{site_id}_{mask_type}_midday.png"), width = 11, height = 8.5, dpi = 300, bg = "white")
 
 # interactive plotly
-#ggplotly(gg1)
+#plotly::ggplotly(gg1)
 
 # find earliest (lowest val):
 df |>
   mutate(yr = year(datetime), mon = month(datetime), wk = week(datetime)) |>
   slice_min(GRVI, by=c(yr), n=2) |> # top 2 results
-  select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc) |>
+  select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc, bcc) |>
   View()
 
 # find latest (highest)
 df |>
   mutate(yr = year(datetime), mon = month(datetime), wk = week(datetime)) |>
-  slice_max(bcc, by=c(yr), prop=.02) |> # top 2%
-  select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc) |>
+  slice_max(gcc, by=c(yr), prop=.02) |> # top 2%
+  select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc, bcc) |>
   View()
 
