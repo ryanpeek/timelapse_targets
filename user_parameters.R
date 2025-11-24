@@ -7,15 +7,15 @@ chunk_size <- 250
 make_timelapse_video <- TRUE # or change to FALSE
 
 # Date filter for videos:
-date_start <- as.Date("2024-04-01")
-date_end <- as.Date("2025-10-06") # or as "YYYY-MM-DD"
+date_start <- as.Date("2024-07-18")
+date_end <- as.Date("2025-11-21") # or as "YYYY-MM-DD"
 
 # Time filter for videos, 24HR format
 time_start <- "12:00:00"
-time_end <- "12:15:00"
+time_end <- "12:10:00"
 
 # ROI MASK TYPE IF IT EXISTS
-mask_type <- "DB_01_01"
+mask_type <- "SH_02_01"
 
 ## OPTIONS:
 ## FROM Richardson et al
@@ -36,6 +36,6 @@ mask_type <- "DB_01_01"
 # DO NOT CHANGE MANUALLY! -----------------------------
 # these are updated automatically using `source("set_photo_dir.R")`
 # select a photo inside the folder of interest
-user_directory <- "/Volumes/CEMAF_pheno/TIMELAPSE_ST/STV1/20241016"
+user_directory <- "/Volumes/CEMAF_pheno/TIMELAPSE_DTSM/MFA-CRLF11/20251121"
 exif_directory <- fs::path_dir(user_directory)
-site_id <- "STV1"
+site_id <- "MFA-CRLF11"
