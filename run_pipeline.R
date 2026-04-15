@@ -201,7 +201,7 @@ mask_type
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
 # chunk size can vary but ~100 is best
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 150, parallel = TRUE)
+df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 150, parallel = FALSE)
 
 ## 3. Plot ---------------------------------------------------------------
 
@@ -253,10 +253,10 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id, .071))
+(gg1 <- ph_gg(df, datetime, gcc, mask_type, site_id, 0.47))
 
 # save out:
-varname <- "grvi"
+varname <- "gcc"
 fs::dir_create(glue("{exif_directory}/figs"))
 ggsave(glue("{exif_directory}/figs/{varname}_{site_id}_{mask_type}_midday.png"), width = 11, height = 8.5, dpi = 300, bg = "white")
 
@@ -268,12 +268,26 @@ df |>
   mutate(yr = year(datetime), mon = month(datetime), wk = week(datetime)) |>
   slice_min(GRVI, by=c(yr), n=2) |> # top 2 results
   select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc, bcc) |>
-  View()
+  View(title = "grvi_min_by_yr")
 
 # find latest (highest)
 df |>
   mutate(yr = year(datetime), mon = month(datetime), wk = week(datetime)) |>
-  slice_max(gcc, by=c(yr), prop=.02) |> # top 2%
+  slice_max(gcc, by=c(yr), n=2) |> # top 2%: prop=.02
   select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc, bcc) |>
-  View()
+  View(title = "gcc_max_by_yr")
 
+# when did gcc exceed 0.4 in each year?
+df |>
+  mutate( yr = year(datetime),
+          mon = month(datetime), wk = week(datetime)) |>
+  arrange(datetime) |>
+  group_by(yr) |>
+  mutate(
+    crossed = gcc > 0.4 & lag(gcc, default = -Inf) <= 0.4
+  ) |>
+  filter(crossed) |>
+  slice(1) |>
+  ungroup() |>
+  select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc, bcc) |>
+  View(title = "gcc_0.4")
