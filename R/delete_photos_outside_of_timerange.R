@@ -19,31 +19,25 @@ dry_run   <- TRUE
 exif_directory <- fs::path_dir(selected_dir)
 site_id <- fs::path_file(path_dir(selected_dir))
 
-
-# Use Exiftools to filter -------------------------------------------------
-
-exif_filter <- sprintf(
-  "$Time ge '%s' and $Time lt '%s'",
-  time_start,
-  time_end
-)
-
 # List Files --------------------------------------------------------------
 
 files <- fs::dir_ls(selected_dir, recurse = TRUE, type="file")
 
 # Read in Files that Meet Filter Params -----------------------------------
 
-df_keep <- exiftoolr::exif_read(
+df <- exiftoolr::exif_read(
   files,
-  tags = c("FileName", "Directory", "DatetimeOriginal"),
-  args = c("-if", exif_filter)) |>
+  tags = c("FileName", "Directory", "DateTimeOriginal")) |>
   mutate(
     full_path = file.path(Directory, FileName),
-    datetime  = ymd_hms(DateTimeOriginal, tz = tz),
-    time_str  = format(datetime, "%H:%M:%S")
+    datetime  = lubridate::ymd_hms(DateTimeOriginal, tz = tz)
   )
 
+df_keep <- df |>
+  filter(
+    format(datetime, "%H:%M:%S") >= time_start,
+    format(datetime, "%H:%M:%S") <= time_end
+  )
 
 # build paths for files to keep
 keep_paths <- df_keep$full_path
@@ -51,7 +45,7 @@ keep_paths <- df_keep$full_path
 # Validation
 df_keep <- df_keep  |>
   mutate(
-    within_window = time_str >= start_time & time_str <= end_time
+    within_window = format(datetime, "%H:%M:%S") >= time_start & format(datetime, "%H:%M:%S") <= time_end
   )
 
 # validation
@@ -63,7 +57,6 @@ if (nrow(validation_issues) > 0) {
   print(validation_issues)
   stop("Aborting due to validation failure.")
 }
-
 
 # Get Delete Paths -------------------------------------------------------
 
@@ -82,6 +75,8 @@ print(head(delete_paths, 20))
 
 # Delete Files ------------------------------------------------------------
 
+dry_run   <- FALSE
+
 if (dry_run) {
   message("DRY RUN: No files deleted.")
 } else {
@@ -92,14 +87,14 @@ if (dry_run) {
 
 # Log these changes
 write.csv(
-  df_keep  |> select(full_path, DateTimeOriginal, datetime, time_str),
-  file=glue("{exif_directory}/logs/{Sys.Date}_kept_files.csv"),
+  df_keep,
+  file=glue("{exif_directory}/logs/{Sys.Date()}_kept_files.csv"),
   row.names = FALSE
 )
 
 write.csv(
   data.frame(full_path = delete_paths),
-  file=glue("{exif_directory}/logs/{Sys.Date}_deleted_files.csv"),
+  file=glue("{exif_directory}/logs/{Sys.Date()}_deleted_files.csv"),
   row.names = FALSE
 )
 
