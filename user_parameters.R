@@ -36,6 +36,6 @@ mask_type <- "GR_01_01"
 # DO NOT CHANGE MANUALLY! -----------------------------
 # these are updated automatically using `source("set_photo_dir.R")`
 # select a photo inside the folder of interest
-user_directory <- "/Volumes/CEMAF_pheno/TIMELAPSE/DAVI1_relegated/20240724"
+user_directory <- "E:/TIMELAPSE/z_REMOVED/FORE1/20240808"
 exif_directory <- fs::path_dir(user_directory)
-site_id <- "DAVI1_relegated"
+site_id <- "FORE1"

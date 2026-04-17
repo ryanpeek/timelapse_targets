@@ -10,9 +10,9 @@ library(fs)
 
 source("set_photo_dir.R") # creates "selected_dir" as object in R
 source("user_parameters.R")
-tz        <- "America/Los_Angeles"         # adjust if needed
-time_start  <- '11:00:00'                            # 10 AM
-time_end    <- '13:00:00'                            # 2 PM
+tz        <- "America/Los_Angeles"
+time_start  <- '11:00:00'
+time_end    <- '13:00:00'
 dry_run   <- TRUE
 
 # extract a few pieces
@@ -70,7 +70,7 @@ cat("Photos kept:", length(keep_paths), "\n")
 cat("Photos to delete:", length(delete_paths), "\n\n")
 
 # Preview first few files
-print(head(delete_paths, 20))
+#print(head(delete_paths, 20))
 
 
 # Delete Files ------------------------------------------------------------
@@ -88,13 +88,13 @@ if (dry_run) {
 # Log these changes
 write.csv(
   df_keep,
-  file=glue("{exif_directory}/logs/{Sys.Date()}_kept_files.csv"),
+  file=glue("{exif_directory}/logs/{Sys.Date()}_{site_id}_kept_files_{fs::path_file(selected_dir)}.csv"),
   row.names = FALSE
 )
 
 write.csv(
   data.frame(full_path = delete_paths),
-  file=glue("{exif_directory}/logs/{Sys.Date()}_deleted_files.csv"),
+  file=glue("{exif_directory}/logs/{Sys.Date()}_{site_id}_deleted_files_{fs::path_file(selected_dir)}.csv"),
   row.names = FALSE
 )
 
