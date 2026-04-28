@@ -11,8 +11,8 @@ library(fs)
 source("set_photo_dir.R") # creates "selected_dir" as object in R
 source("user_parameters.R")
 tz        <- "America/Los_Angeles"
-time_start  <- '11:00:00'
-time_end    <- '13:00:00'
+time_start  <- '11:30:00'
+time_end    <- '12:30:00'
 dry_run   <- TRUE
 
 # extract a few pieces
