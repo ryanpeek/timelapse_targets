@@ -11,8 +11,8 @@ library(fs)
 source("set_photo_dir.R") # creates "selected_dir" as object in R
 source("user_parameters.R")
 tz        <- "America/Los_Angeles"
-time_start  <- '11:30:00'
-time_end    <- '12:30:00'
+time_start  <- '12:00:00'
+time_end    <- '12:15:00'
 dry_run   <- TRUE
 
 # extract a few pieces
@@ -86,6 +86,8 @@ if (dry_run) {
 }
 
 # Log these changes
+fs::dir_create(glue("{exif_directory}/logs"))
+
 write.csv(
   df_keep,
   file=glue("{exif_directory}/logs/{Sys.Date()}_{site_id}_kept_files_{fs::path_file(selected_dir)}.csv"),
