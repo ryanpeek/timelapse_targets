@@ -137,7 +137,7 @@ mask_type
 #mask_type <- "WA_01_01"
 
 # Now draw on the photo. If you want a different photo date, change the "index=" value. Make sure to hit escape to save.
-make_polygon_roi(photo_exif_filt, index = 35, mask_type = mask_type, user_directory, overwrite = TRUE)
+make_polygon_roi(photo_exif_filt, index = 123, mask_type = mask_type, user_directory, overwrite = TRUE)
 
 ## IMPORTANT NOTE: RSTUDIO HAS A GLITCH THAT CAUSES ORTHOGONAL SHIFT IN
 ## DRAWN POLYGON. TO AVOID TRY ONE OF FOLLOWING:
@@ -223,7 +223,7 @@ mask_type
 df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
 
 # where image will be on top, change days if long time series
-photo_date_location <- max(df$datetime)-days(20)
+photo_date_location <- max(df$datetime)-days(14)
 
 # plot function with basic settings
 ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
@@ -246,14 +246,14 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
          x="") +
     geom_image(
       data = tibble(datetime = ymd_hms(glue("{photo_date_location}")), var = img_var_y),
-      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.4)
+      aes(x=datetime, y=var, image = glue("{exif_directory}/ROI/{site_id}_{mask_type}_roi_masked.png")), size=0.34)
 }
 
 # to use function, specify the data, the x, and y, with no quotes:
 
 # Variable options: gcc, rcc, GRVI, exG, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, gcc, mask_type, site_id, 0.47))
+(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id, .24))
 
 # save out:
 varname <- "gcc"

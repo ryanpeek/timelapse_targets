@@ -74,9 +74,17 @@ extract_rgb_parallel <- function(site_id, mask_type, exif_dir, photo_exif_data, 
         red = RGB[1], green = RGB[2], blue = RGB[3],
         rcc = cc[1], gcc = cc[2], bcc = cc[3],
         rcc.std = std[1], gcc.std = std[2], bcc.std = std[3],
-        brightness = brightness, darkness = darkness, contrast = brightness - darkness,
-        grR = gcc / rcc, rbR = rcc / bcc, gbR = gcc / bcc,
-        GRVI = (gcc - rcc) / (gcc + rcc), exG = 2 * green - red - blue,
+        brightness = brightness,
+        darkness = darkness,
+        contrast = brightness - darkness,
+        grR = gcc / rcc,
+        rbR = rcc / bcc,
+        gbR = gcc / bcc,
+        GRVI = (gcc - rcc) / (gcc + rcc), # Tucker 1979
+        MGRVI = (gcc^2 - rcc^2)/(gcc^2 + bcc*rcc),# Bendig et al 1995
+        exG = 2 * green - red - blue, # Woeebbecke et al 1995
+        exR = 1.4 * red - blue, # Meyer et al. 1999
+        exGR = exG - exR, # Neto 2004
         file_name = fs::path_file(path),
         mask_type = mask_type
       )
