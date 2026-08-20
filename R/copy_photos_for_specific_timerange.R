@@ -10,7 +10,6 @@ library(fs)
 # Parameters --------------------------------------------------------------
 
 source("set_photo_dir.R") # pick photo from folder we want to copy photos over from
-#source("user_parameters.R")
 date_start <- as.Date("2025-08-20")
 date_end <- as.Date("2026-08-13") # or as "YYYY-MM-DD"
 tz        <- "America/Los_Angeles"
@@ -27,7 +26,7 @@ exif_directory <- fs::path_dir(selected_dir)
 (site_id <- fs::path_file(path_dir(selected_dir)))
 
 # set site_id manually if reading directly from SD card
-site_id <- "SALM13A"
+site_id <- "SALM29A"
 
 # directory to save the photos into (i.e., "midday")
 subset_dir_name <- "midday"
@@ -74,7 +73,8 @@ df_keep <- df_keep  |>
     pheno_name = glue("{site_id}_{photo_ymdhms}.{path_ext(FileName)}"),
     dest_dir = glue("{out_dir}/{site_id}/{subset_dir_name}/{pheno_name}"))
 
-# validation warning check
+# Check and Inspect -------------------------------------------------------
+
 validation_issues <- df_keep |>
   filter(!within_window)
 
@@ -83,8 +83,6 @@ if (nrow(validation_issues) > 0) {
   print(validation_issues)
   stop("Aborting due to validation failure.")
 }
-
-# Check and Inspect -------------------------------------------------------
 
 cat("Total photos:", length(files), "\n")
 cat("Photos kept:", length(keep_paths), "\n")
