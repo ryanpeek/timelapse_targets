@@ -4,6 +4,7 @@
 
 library(exiftoolr)
 library(dplyr)
+library(lubridate)
 library(fs)
 
 # Parameters --------------------------------------------------------------
@@ -15,7 +16,6 @@ date_end <- as.Date("2026-08-13") # or as "YYYY-MM-DD"
 tz        <- "America/Los_Angeles"
 time_start  <- '12:00:00'
 time_end    <- '12:10:00'
-dry_run   <- TRUE
 
 # select the directory we want to save TO
 out_dir <- "F:/TIMELAPSE_CRGP"
@@ -31,6 +31,10 @@ site_id <- "SALM13A"
 
 # directory to save the photos into (i.e., "midday")
 subset_dir_name <- "midday"
+
+# Create out directory if it doesn't exist
+fs::dir_create(glue("{out_dir}/{site_id}/{subset_dir_name}"))
+
 
 # List Files --------------------------------------------------------------
 
@@ -60,13 +64,15 @@ df_keep <- df |>
 # build paths for files to copy
 keep_paths <- df_keep$full_path
 
-# Validation: double check with additional filter
+# Validation: double check with additional filter and add renaming option:
 df_keep <- df_keep  |>
   mutate(
     within_window = format(datetime, "%H:%M:%S") >= time_start & format(datetime, "%H:%M:%S") <= time_end
   ) |>
   mutate(
-    dest_dir = glue("{out_dir}/{site_id}/{subset_dir_name}/{FileName}"))
+    photo_ymdhms = glue("{format(as_date(datetime), '%Y_%m_%d')}_{gsub(':', '', hms::as_hms(datetime))}"),
+    pheno_name = glue("{site_id}_{photo_ymdhms}.{path_ext(FileName)}"),
+    dest_dir = glue("{out_dir}/{site_id}/{subset_dir_name}/{pheno_name}"))
 
 # validation warning check
 validation_issues <- df_keep |>
@@ -82,15 +88,11 @@ if (nrow(validation_issues) > 0) {
 
 cat("Total photos:", length(files), "\n")
 cat("Photos kept:", length(keep_paths), "\n")
-
-# Set Location for Copy ---------------------------------------------------
-
-# Create out directory if it doesn't exist
-fs::dir_create(glue("{out_dir}/{site_id}/{subset_dir_name}"))
+fs::dir_exists(glue("{out_dir}/{site_id}/{subset_dir_name}"))
 
 # Copy Files ------------------------------------------------------------
 
-message(glue("Copying {nrow(df_keep)} photos into {out_dir}/{site_id}/midday/..."))
+message(glue("Copying {nrow(df_keep)} photos into {out_dir}/{site_id}/{subset_dir_name}/..."))
 fs::file_copy(path = df_keep$SourceFile, new_path = df_keep$dest_dir, overwrite = TRUE)
 message(glue("Done!"))
 
