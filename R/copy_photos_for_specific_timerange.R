@@ -1,5 +1,5 @@
-# delete photos not within time frame
-# useful to clean up space AFTER photos are uploaded to WI
+# Copy photos only within a certain time range
+# useful for storing photos or subset for uploading to WI
 # constrain to just 10-2 or 12pm photos
 
 library(exiftoolr)
@@ -8,23 +8,40 @@ library(fs)
 
 # Parameters --------------------------------------------------------------
 
-source("set_photo_dir.R") # creates "selected_dir" as object in R
-source("user_parameters.R")
+source("set_photo_dir.R") # pick photo from folder we want to copy photos over from
+#source("user_parameters.R")
+date_start <- as.Date("2025-08-20")
+date_end <- as.Date("2026-08-13") # or as "YYYY-MM-DD"
 tz        <- "America/Los_Angeles"
 time_start  <- '12:00:00'
 time_end    <- '12:10:00'
 dry_run   <- TRUE
 
+# select the directory we want to save TO
+out_dir <- "F:/TIMELAPSE_CRGP"
+
 # extract a few pieces
 exif_directory <- fs::path_dir(selected_dir)
-site_id <- fs::path_file(path_dir(selected_dir))
+
+# set site_id if using external drive and named site folders
+(site_id <- fs::path_file(path_dir(selected_dir)))
+
+# set site_id manually if reading directly from SD card
+site_id <- "SALM13A"
+
+# directory to save the photos into (i.e., "midday")
+subset_dir_name <- "midday"
 
 # List Files --------------------------------------------------------------
 
 files <- fs::dir_ls(selected_dir, recurse = TRUE, type="file")
 
+# check number of photos in folder with this number?
+length(files)
+
 # Read in Files that Meet Filter Params -----------------------------------
 
+# this can take a while
 df <- exiftoolr::exif_read(
   files,
   tags = c("FileName", "Directory", "DateTimeOriginal")) |>
@@ -33,22 +50,25 @@ df <- exiftoolr::exif_read(
     datetime  = lubridate::ymd_hms(DateTimeOriginal, tz = tz)
   )
 
+# set paths for photos we want to copy
 df_keep <- df |>
   filter(
     format(datetime, "%H:%M:%S") >= time_start,
     format(datetime, "%H:%M:%S") <= time_end
   )
 
-# build paths for files to keep
+# build paths for files to copy
 keep_paths <- df_keep$full_path
 
-# Validation
+# Validation: double check with additional filter
 df_keep <- df_keep  |>
   mutate(
     within_window = format(datetime, "%H:%M:%S") >= time_start & format(datetime, "%H:%M:%S") <= time_end
-  )
+  ) |>
+  mutate(
+    dest_dir = glue("{out_dir}/{site_id}/{subset_dir_name}/{FileName}"))
 
-# validation
+# validation warning check
 validation_issues <- df_keep |>
   filter(!within_window)
 
@@ -58,46 +78,20 @@ if (nrow(validation_issues) > 0) {
   stop("Aborting due to validation failure.")
 }
 
-# Get Delete Paths -------------------------------------------------------
-
-# build paths for files to DELETE
-delete_paths <- setdiff(files, keep_paths)
-
 # Check and Inspect -------------------------------------------------------
 
 cat("Total photos:", length(files), "\n")
 cat("Photos kept:", length(keep_paths), "\n")
-cat("Photos to delete:", length(delete_paths), "\n\n")
 
-# Preview first few files
-#print(head(delete_paths, 20))
+# Set Location for Copy ---------------------------------------------------
 
+# Create out directory if it doesn't exist
+fs::dir_create(glue("{out_dir}/{site_id}/{subset_dir_name}"))
 
-# Delete Files ------------------------------------------------------------
+# Copy Files ------------------------------------------------------------
 
-dry_run   <- FALSE
-
-if (dry_run) {
-  message("DRY RUN: No files deleted.")
-} else {
-  paths <- delete_paths[fs::file_exists(delete_paths)]
-  fs::file_delete(paths)
-  message(length(paths), " files deleted.")
-}
-
-# Log these changes
-fs::dir_create(glue("{exif_directory}/logs"))
-
-write.csv(
-  df_keep,
-  file=glue("{exif_directory}/logs/{Sys.Date()}_{site_id}_kept_files_{fs::path_file(selected_dir)}.csv"),
-  row.names = FALSE
-)
-
-write.csv(
-  data.frame(full_path = delete_paths),
-  file=glue("{exif_directory}/logs/{Sys.Date()}_{site_id}_deleted_files_{fs::path_file(selected_dir)}.csv"),
-  row.names = FALSE
-)
+message(glue("Copying {nrow(df_keep)} photos into {out_dir}/{site_id}/midday/..."))
+fs::file_copy(path = df_keep$SourceFile, new_path = df_keep$dest_dir, overwrite = TRUE)
+message(glue("Done!"))
 
 
