@@ -10,14 +10,12 @@ library(fs)
 # Parameters --------------------------------------------------------------
 
 source("set_photo_dir.R") # pick photo from folder we want to copy photos over from
-date_start <- as.Date("2025-08-20")
-date_end <- as.Date("2026-08-13") # or as "YYYY-MM-DD"
 tz        <- "America/Los_Angeles"
 time_start  <- '12:00:00'
 time_end    <- '12:10:00'
 
 # select the directory we want to save TO
-out_dir <- "F:/TIMELAPSE_CRGP"
+out_dir <- "/Volumes/CEMAF-PHENO/TIMELAPSE_CRGP"
 
 # extract a few pieces
 exif_directory <- fs::path_dir(selected_dir)
@@ -26,7 +24,7 @@ exif_directory <- fs::path_dir(selected_dir)
 (site_id <- fs::path_file(path_dir(selected_dir)))
 
 # set site_id manually if reading directly from SD card
-site_id <- "SALM29A"
+# site_id <- "BLRO-R3"
 
 # directory to save the photos into (i.e., "midday")
 subset_dir_name <- "midday"
@@ -45,13 +43,16 @@ length(files)
 # Read in Files that Meet Filter Params -----------------------------------
 
 # this can take a while
+library(tictoc)
+
+tic("exif extraction")
 df <- exiftoolr::exif_read(
   files,
   tags = c("FileName", "Directory", "DateTimeOriginal")) |>
   mutate(
     full_path = file.path(Directory, FileName),
-    datetime  = lubridate::ymd_hms(DateTimeOriginal, tz = tz)
-  )
+    datetime  = lubridate::ymd_hms(DateTimeOriginal, tz = tz))
+toc()
 
 # set paths for photos we want to copy
 df_keep <- df |>
@@ -89,9 +90,9 @@ cat("Photos kept:", length(keep_paths), "\n")
 fs::dir_exists(glue("{out_dir}/{site_id}/{subset_dir_name}"))
 
 # Copy Files ------------------------------------------------------------
-
+tic("Copy files")
 message(glue("Copying {nrow(df_keep)} photos into {out_dir}/{site_id}/{subset_dir_name}/..."))
 fs::file_copy(path = df_keep$SourceFile, new_path = df_keep$dest_dir, overwrite = TRUE)
 message(glue("Done!"))
-
+toc()
 
