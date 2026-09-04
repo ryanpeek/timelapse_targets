@@ -179,6 +179,10 @@ photo_exif_filt <- photo_exif |>
     hms::as_hms(datetime) >= hms::as_hms(time_start) & hms::as_hms(datetime) <= hms::as_hms(time_end)) |>
   filter(as_date(datetime)>=date_start & as_date(datetime)<= date_end)
 
+# Date range
+glue("Start Date: {photo_exif_filt |> arrange(photo_ymdhms) |> select(photo_ymdhms) |> first()}")
+glue("End Date: {photo_exif_filt |> arrange(photo_ymdhms) |> select(photo_ymdhms) |> last()}")
+
 # note how many photos in full dataset vs. filt dataset:
 nrow(photo_exif)
 nrow(photo_exif_filt)
@@ -197,11 +201,11 @@ mask_type
 #mask_type <- "WA_01_01"
 
 # specify the time filter for filename (timestart_timeend_datestart_dateend)
-(timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}"))
+(timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',min(as_date(photo_exif_filt$datetime)))}_{gsub(pattern = '-','',max(as_date(photo_exif_filt$datetime)))}"))
 
 # run in parallel or not...turn the "parallel=TRUE" to FALSE if it's not working.
 # chunk size can vary but ~100 is best
-df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 150, parallel = FALSE)
+df_pheno <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, timefilt = timefilt, chunk_size = 150, parallel = FALSE)
 
 ## 3. Plot ---------------------------------------------------------------
 
@@ -210,20 +214,27 @@ df <- extract_rgb_parallel(site_id, mask_type, exif_directory, photo_exif_filt, 
 source("R/packages.R")
 source("user_parameters.R")
 
-# set parameters based on user_parameters.R
-timefilt <- glue("{strtrim(gsub(pattern = ':','',time_start), 4)}_{strtrim(gsub(pattern = ':','',time_end), 4)}_{gsub(pattern = '-','',date_start)}_{gsub(pattern = '-','',date_end)}")
-
-# check ROI mask type you are using from user_parameters
+# check mask type (or specify manually)
 mask_type
 
-# manually
-#mask_type <- "WA_01_01"
+# if starting from here, need to choose file to use:
+if(!exists("df_pheno", envir = .GlobalEnv)){
 
-# load the data
-df <- read_csv(glue("{exif_directory}/pheno_metrics_{site_id}_{mask_type}_time_{timefilt}.csv.gz"))
+  # Pick the Metrics dataset you want to read in:
+  metrics_csv <- file.choose(new = FALSE)
+  # load the data
+  df_pheno <- read_csv(glue("{metrics_csv}"))
+
+} else({
+  glue("File already in environment, using 'df_pheno'! ")
+})
 
 # where image will be on top, change days if long time series
-photo_date_location <- max(df$datetime)-days(14)
+photo_date_location <- max(df_pheno$datetime)-days(14)
+
+# get max/min dates from data
+(timerange <- glue("{gsub(pattern = '-','',min(as_date(df_pheno$datetime)))}_{gsub(pattern = '-','',max(as_date(df_pheno$datetime)))}"))
+
 
 # plot function with basic settings
 ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
@@ -253,10 +264,10 @@ ph_gg <- function(data, x_var, pheno_var, mask_type, site_id, img_var_y){
 
 # Variable options: gcc, rcc, MGRVI, GRVI, exG, exR,exGR, grR, rbR, gbR, bcc, rcc.std
 
-(gg1 <- ph_gg(df, datetime, GRVI, mask_type, site_id, .10))
+(gg1 <- ph_gg(df_pheno, datetime, MGRVI, mask_type, site_id, .23))
 
 # save out:
-varname <- "gcc"
+varname <- "MGRVI"
 fs::dir_create(glue("{exif_directory}/figs"))
 ggsave(glue("{exif_directory}/figs/{varname}_{site_id}_{mask_type}_midday.png"), width = 11, height = 8.5, dpi = 300, bg = "white")
 
@@ -264,21 +275,21 @@ ggsave(glue("{exif_directory}/figs/{varname}_{site_id}_{mask_type}_midday.png"),
 #plotly::ggplotly(gg1)
 
 # find earliest (lowest val):
-df |>
+df_pheno |>
   mutate(yr = year(datetime), mon = month(datetime), wk = week(datetime)) |>
   slice_min(GRVI, by=c(yr), n=2) |> # top 2 results
   select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc, bcc) |>
   View(title = "grvi_min_by_yr")
 
-# find latest (highest)
-df |>
+# gcc find latest (highest)
+df_pheno |>
   mutate(yr = year(datetime), mon = month(datetime), wk = week(datetime)) |>
   slice_max(gcc, by=c(yr), n=2) |> # top 2%: prop=.02
   select(datetime, yr, wk, GRVI, gcc, exG, gbR, rcc, bcc) |>
   View(title = "gcc_max_by_yr")
 
 # when did gcc exceed 0.4 in each year?
-df |>
+df_pheno |>
   mutate( yr = year(datetime),
           mon = month(datetime), wk = week(datetime)) |>
   arrange(datetime) |>
